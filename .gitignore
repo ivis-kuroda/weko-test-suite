@@ -1,0 +1,12 @@
+node_modules/
+artifacts/
+.env
+.env.*
+!.env.example
+
+# Saved browser sessions contain live credentials.
+auth.json
+*.storageState.json
+
+# Snapshots taken from a running environment.
+snapshots/

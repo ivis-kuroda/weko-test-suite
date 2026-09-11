@@ -1,0 +1,45 @@
+# Plugin manifest for WEKO3.
+#
+# Declares everything agentic-test-hub needs to act on this target: where to
+# reach it, what can be done to it, and how to tell what state it is in. The
+# hub itself knows only four ways to act — run a command, make a request,
+# query a database, drive a browser — so every entry below reduces to one of
+# those.
+#
+# Placeholders resolve from the environment (`{{env.X}}`), from an operation's
+# arguments (`{{param.x}}`), or from values an earlier scenario step produced
+# (`{{step.x}}`). An unresolved placeholder fails the run rather than
+# substituting nothing.
+apiVersion: "1"
+name: weko
+description: WEKO3 repository software, run under docker-compose
+
+connections:
+  # Pgpool-II fronts the cluster; tests connect through it as the application
+  # does, so they exercise the same path.
+  main-db:
+    kind: postgres
+    url: "{{env.WEKO_DB_URL}}"
+
+  # Reached over REST rather than through a client library: the official
+  # clients reject servers outside a narrow version range, which would pin
+  # this suite to one server major.
+  search:
+    kind: http
+    baseUrl: "{{env.WEKO_SEARCH_URL}}"
+    headers:
+      Content-Type: application/json
+
+  api:
+    kind: http
+    baseUrl: "{{env.WEKO_BASE_URL}}"
+
+  ui:
+    kind: browser
+    baseUrl: "{{env.WEKO_BASE_URL}}"
+
+operations: {}
+
+states: {}
+
+evidence: {}
