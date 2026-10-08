@@ -71,6 +71,19 @@ def test_helper_contract_and_state(rig, docker_bin):
     assert recid not in after["rows"] and after["count"] == 6
 
 
+def test_helper_delete_record_is_idempotent(rig, docker_bin):
+    recid = helper(rig, docker_bin, "create_record", {"title": "T", "owner_email": "a@b.c"})[
+        "result"
+    ]["recid"]
+    first = helper(rig, docker_bin, "delete_record", {"recid": recid})["result"]
+    second = helper(rig, docker_bin, "delete_record", {"recid": recid})["result"]
+    assert first["previous"] == "registered" and first["deleted"] is True
+    assert second["previous"] == "deleted"
+    with httpx.Client(base_url=rig.url) as http:
+        gone = http.get(f"/sword/deposit/{recid}", headers={"Authorization": f"Bearer {ADMIN}"})
+    assert gone.status_code == 404
+
+
 def test_helper_token_is_prefixed_and_usable(rig, docker_bin):
     helper(
         rig,

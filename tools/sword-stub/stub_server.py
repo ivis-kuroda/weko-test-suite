@@ -1058,6 +1058,7 @@ def _helper_fail(type_: str, message: str) -> dict[str, Any]:
 
 HELPER_COMMANDS = [
     "create_record",
+    "delete_record",
     "create_token",
     "create_user",
     "inject_fault",
@@ -1202,6 +1203,24 @@ def run_helper(world: World, cmd: str, params: dict[str, Any]) -> dict[str, Any]
                     "created": created,
                     "doi": doi,
                 }
+            )
+        if cmd == "delete_record":
+            # Idempotent like the real helper; reports the state it found.
+            recid = str(params.get("recid"))
+            if params.get("restore"):
+                restored = recid in w.deleted
+                w.deleted = [d for d in w.deleted if d != recid]
+                if restored:
+                    w.records.setdefault(recid, w._new_record({"title": "restored"}))
+                return _helper_ok({"recid": recid, "restored": restored})
+            previous = (
+                "deleted" if recid in w.deleted else "registered" if recid in w.records else None
+            )
+            if recid in w.records:
+                del w.records[recid]
+                w.deleted.append(recid)
+            return _helper_ok(
+                {"recid": recid, "previous": previous, "deleted": previous is not None}
             )
         if cmd == "insert_doi_pid":
             recid = str(params.get("recid"))
