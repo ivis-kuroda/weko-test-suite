@@ -56,6 +56,17 @@ node ../agentic-test-hub/packages/cli/bin/generate-test.ts <ID> \
 - `OP-HELPER` を使うケースは `weko_suite_ext`（リポジトリ直下）を import する。
   `pytest` はリポジトリ直下で実行すること（`pyproject.toml` が import パスを通す）。
 
+### 仕様を別のチェックアウトから読む
+
+仕様 YAML は `spec-draft/*` ブランチでレビューし、テストコードは機能ブランチへ入れる運用のため、
+`SPECS_DIR` で仕様の場所を指定できる。`automation: generated` の書き戻しは `SPECS_DIR` 側のファイルに入る
+（spec-draft 側でコミットする）。
+
+```sh
+git worktree add ../weko-test-suite-spec spec-draft/sword-error-codes
+SPECS_DIR=../weko-test-suite-spec/specs scripts/gen-test.sh TC-SW-S5-01 --force
+```
+
 ## 実行する
 
 ```sh
