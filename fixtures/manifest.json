@@ -1,0 +1,157 @@
+{
+  "generatedBy": "seeds/build_fixtures.py",
+  "fixtures": [
+    {
+      "name": "simplezip-normal.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Normal SimpleZip with CSV metadata (format TSV/CSV). Skeleton columns only.",
+      "bytes": 543,
+      "sha256": "787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74",
+      "digest": "SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74"
+    },
+    {
+      "name": "bagit-normal.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "Normal SWORDBagIt: valid bag, metadata/sword.json (RO-Crate JSON-LD).",
+      "bytes": 2281,
+      "sha256": "d56ab67a84cea9a47122c583f6cf26cc20cdbd236c4a6637b1699487d8c78bb9",
+      "digest": "SHA-256=d56ab67a84cea9a47122c583f6cf26cc20cdbd236c4a6637b1699487d8c78bb9"
+    },
+    {
+      "name": "rocrate-normal.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Normal RO-Crate in SimpleZip: data/ro-crate-metadata.json, also a valid bag (weko validates bags on the JSON-LD path regardless of packaging).",
+      "bytes": 2276,
+      "sha256": "b2770cef1ae9ecb1a633bf997a8ce5a93074e947a70490beea8864f2cbdecd65",
+      "digest": "SHA-256=b2770cef1ae9ecb1a633bf997a8ce5a93074e947a70490beea8864f2cbdecd65"
+    },
+    {
+      "name": "broken.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Not openable as a ZIP (S5-09).",
+      "bytes": 54,
+      "sha256": "c2cbdac2befb9b01068e4ee0d2a22d0e4430138729a862babfb25320df0d86bb",
+      "digest": "SHA-256=c2cbdac2befb9b01068e4ee0d2a22d0e4430138729a862babfb25320df0d86bb"
+    },
+    {
+      "name": "bagit-checksum-mismatch.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "SWORDBagIt whose manifest checksum of data/data.csv is wrong: bag.validate() fails.",
+      "bytes": 2281,
+      "sha256": "bd5a7476a2ccbc57c39a76f9e5be7cfae57335bcd548f4cac0207f90150136b7",
+      "digest": "SHA-256=bd5a7476a2ccbc57c39a76f9e5be7cfae57335bcd548f4cac0207f90150136b7",
+      "facts": {
+        "member": "data/data.csv"
+      }
+    },
+    {
+      "name": "bagit-no-bagit-txt.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "SWORDBagIt without bagit.txt (structure missing; measure what weko answers, F-12).",
+      "bytes": 2056,
+      "sha256": "cbc4b71ce9bb969734be67aeb8c298fde79355b7e76df0a621fc657a321b5c50",
+      "digest": "SHA-256=cbc4b71ce9bb969734be67aeb8c298fde79355b7e76df0a621fc657a321b5c50"
+    },
+    {
+      "name": "bagit-non-utf8-metadata.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "Valid bag whose metadata/sword.json is not UTF-8 (Shift_JIS bytes).",
+      "bytes": 2120,
+      "sha256": "d69dcf6bb18e768c3b6954ea1e74dfffe3c93313e1f16292359b776bc0943ede",
+      "digest": "SHA-256=d69dcf6bb18e768c3b6954ea1e74dfffe3c93313e1f16292359b776bc0943ede",
+      "facts": {
+        "member": "metadata/sword.json",
+        "byteOffset": 343,
+        "encoding": "cp932"
+      }
+    },
+    {
+      "name": "bagit-jsonld-syntax-error.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "Valid bag whose metadata/sword.json has a JSON syntax error at a known position.",
+      "bytes": 2136,
+      "sha256": "dc9e8499df9748d539304f204d8d7bc65a51d94406da4e0a81dd00c722c03560",
+      "digest": "SHA-256=dc9e8499df9748d539304f204d8d7bc65a51d94406da4e0a81dd00c722c03560",
+      "facts": {
+        "member": "metadata/sword.json",
+        "line": 17,
+        "column": 7
+      }
+    },
+    {
+      "name": "bagit-missing-metadata.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SWORDBagIt",
+      "purpose": "SWORDBagIt without metadata/sword.json (packaging error).",
+      "bytes": 1288,
+      "sha256": "e7e3ae958cd363642ed052d6d05e3be42ab5187b38bb663f9ac5db25e3fc9a1e",
+      "digest": "SHA-256=e7e3ae958cd363642ed052d6d05e3be42ab5187b38bb663f9ac5db25e3fc9a1e"
+    },
+    {
+      "name": "simplezip-with-sword-json.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "SimpleZip that contains metadata/sword.json (unexpected for SimpleZip).",
+      "bytes": 1450,
+      "sha256": "c6e32886c35558a742294db835a7c7d56ecbc64d68415c1334f0367290b7694c",
+      "digest": "SHA-256=c6e32886c35558a742294db835a7c7d56ecbc64d68415c1334f0367290b7694c"
+    },
+    {
+      "name": "rocrate-missing-metadata.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "RO-Crate whose ro-crate-metadata.json sits at the archive root, not under data/ (weko reports it missing).",
+      "bytes": 902,
+      "sha256": "768ef5fa649d08e9c2a52a55b333e165e80b242b57ef98d0753f5c7335fa9249",
+      "digest": "SHA-256=768ef5fa649d08e9c2a52a55b333e165e80b242b57ef98d0753f5c7335fa9249"
+    },
+    {
+      "name": "simplezip-xml.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "SimpleZip with a JPCOAR XML metadata file (format XML; needs XML import enabled and a workflow in the SWORD settings).",
+      "bytes": 579,
+      "sha256": "0d3dc285131ed9a6ae05f10bc3dc0f576d6330fc40108e21b4c7bd5fa1f3ec6d",
+      "digest": "SHA-256=0d3dc285131ed9a6ae05f10bc3dc0f576d6330fc40108e21b4c7bd5fa1f3ec6d"
+    },
+    {
+      "name": "simplezip-multi-item.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "SimpleZip CSV with two items (EP4 accepts one: multiple items in PUT).",
+      "bytes": 577,
+      "sha256": "0421ab2a3e203140ae7c6bfcf6898adb8296a99b76693b7288e73080994f9303",
+      "digest": "SHA-256=0421ab2a3e203140ae7c6bfcf6898adb8296a99b76693b7288e73080994f9303",
+      "facts": {
+        "items": 2
+      }
+    },
+    {
+      "name": "put-item-without-id.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "EP4 body whose item has no id (treated as a new item, not registered for PUT).",
+      "bytes": 543,
+      "sha256": "787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74",
+      "digest": "SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74"
+    },
+    {
+      "name": "simplezip-title-a.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Normal SimpleZip, title A (different titles for duplicate checks).",
+      "bytes": 548,
+      "sha256": "d5e6f5e1d7950137b69aa22b2fcf623c8ed119023e06d9b6a27930c527a697d2",
+      "digest": "SHA-256=d5e6f5e1d7950137b69aa22b2fcf623c8ed119023e06d9b6a27930c527a697d2"
+    },
+    {
+      "name": "simplezip-title-b.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Normal SimpleZip, title B.",
+      "bytes": 548,
+      "sha256": "ee318e39ed66d6aafada3528e61ee5ee872e01f76744db36a3fd70400f8c6dd8",
+      "digest": "SHA-256=ee318e39ed66d6aafada3528e61ee5ee872e01f76744db36a3fd70400f8c6dd8"
+    },
+    {
+      "name": "simplezip-title-a-similar.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "Same title as title-a, different attachment: similar, not identical.",
+      "bytes": 560,
+      "sha256": "4619808e8c7b1b3b5be6632ff84249ce67ba62d851ad9abfd9b8e92d12e93c5e",
+      "digest": "SHA-256=4619808e8c7b1b3b5be6632ff84249ce67ba62d851ad9abfd9b8e92d12e93c5e"
+    }
+  ]
+}
