@@ -1,0 +1,8 @@
+id: VP-RIG-01
+title: rig only - the stub answers like the check order says
+rationale: mechanics rig example, proves nothing about WEKO
+source:
+  - kind: design
+    ref: docs/stub.md
+risk: low
+parents: []

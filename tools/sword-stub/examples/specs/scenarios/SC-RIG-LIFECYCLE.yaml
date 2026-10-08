@@ -1,0 +1,84 @@
+id: SC-RIG-LIFECYCLE
+title: rig only - create, read, delete, then the record is gone (2101)
+preconditions: []
+steps:
+  - id: S-CREATE
+    summary: the deposit is accepted and its recid is taken from the Location header
+    action:
+      operation: OP-SWORD-POST
+      params:
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        token: STUBTOKEN-direct-admin
+        contentDisposition: "attachment; filename=simplezip-normal.zip"
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        digest: "SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74"
+    expect:
+      - kind: http_status
+        status: 201
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces:
+      recid:
+        from: headers.location
+        pattern: "/sword/deposit/(\\d+)$"
+    viewpoints: []
+  - id: S-GET
+    summary: the status document shows the record
+    action:
+      operation: OP-RIG-GET-DEPOSIT-STEP
+      params: {}
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-CREATE
+    produces: {}
+    viewpoints: []
+  - id: S-DELETE
+    summary: the record is deleted
+    action:
+      operation: OP-RIG-DELETE-STEP
+      params: {}
+    expect:
+      - kind: http_status
+        status: 204
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-GET
+    produces: {}
+    viewpoints: []
+  - id: S-GONE
+    summary: the deleted record answers 404 with code 2101
+    action:
+      operation: OP-RIG-GET-DEPOSIT-STEP
+      params: {}
+    expect:
+      - kind: http_status
+        status: 404
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: contains
+          at: body.error
+          value: "WEKO_SWORDSERVER_E_2101: "
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-DELETE
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  timing: before_and_after
+  ignore:
+    - "Item not found"
+evidenceWaivers: []
+tags:
+  - rig-only
+viewpoints:
+  - VP-RIG-01

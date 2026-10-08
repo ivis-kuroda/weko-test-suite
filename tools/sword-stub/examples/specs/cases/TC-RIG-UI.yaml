@@ -1,0 +1,20 @@
+id: TC-RIG-UI
+summary: rig only - the admin screen revokes a token and logs a console error
+baseline: BL-RIG-UI
+overrides: []
+expect:
+  - kind: text
+    value: console error logged
+    match: contains
+    viewpoints: []
+polarity: nominal
+evidence:
+  timing: before_and_after
+evidenceWaivers: []
+priority: P3
+tags:
+  - rig-only
+automation:
+  status: manual
+viewpoints:
+  - VP-RIG-01
