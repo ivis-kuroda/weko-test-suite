@@ -55,7 +55,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s1_03_revoked_ep2.py
 viewpoints:
   - VP-SW-AU-01
 note: "U-21: 無効トークンが 401 か 403 かは S0-06 の改修前実測で確定する。実測まで 401 を期待し 403 も許容（alsoAccepts）。"

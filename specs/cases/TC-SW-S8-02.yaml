@@ -76,7 +76,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s8_02.py
 viewpoints:
   - VP-SW-EG-11
 note: C-W（SW_TOKEN_W）。アクティビティと下書きが残る（片付けるヘルパーがない）。fixtures の CSV は項目を実際に登録できる形ではないため、対象環境から書き出した複数アイテムのメタデータへの差し替えが必要（fixtures/README.md）。継続 URL の http(s) 形式は 2401 のメッセージ定義（{url}）からの推定。

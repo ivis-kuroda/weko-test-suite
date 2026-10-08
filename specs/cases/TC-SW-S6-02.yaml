@@ -65,7 +65,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s6_02.py
 viewpoints:
   - VP-SW-EG-06
 note: 409・500 にならないことは status 400 の一致で見る。複数条件の優先順位は U-09（要確認）で本ケースは扱わない。

@@ -59,7 +59,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s5_05_packaging_ep2.py
 viewpoints:
   - VP-SW-BD-74
 note: 非対応 Packaging の値は仕様書に指定がないため http://example.org/ath/unsupported-packaging を使う（既定設定では 1402。* を含む設定では 1408、未指定は 1403。U-14・U-22）。

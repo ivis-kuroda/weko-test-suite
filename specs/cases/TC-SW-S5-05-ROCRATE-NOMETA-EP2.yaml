@@ -78,7 +78,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s5_05_rocrate_nometa_ep2.py
 viewpoints:
   - VP-SW-BD-74
 note: 仕様書は『415 または 400 で 1404〜1407 のいずれか』（U-14 個別対応は要確認）。仕様書どおりの許容範囲で判定し、個別コードは実測を記録する。

@@ -59,7 +59,8 @@ appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
 automation:
-  status: manual
+  status: generated
+  impl: tests/generated/test_tc_sw_s5_02_cdmismatch_ep4.py
 viewpoints:
   - VP-SW-BD-71
 note: EP4 は先に recid の存在確認があるため R1 は存在する状態にする（バンドル済みの R1 を使う）。
