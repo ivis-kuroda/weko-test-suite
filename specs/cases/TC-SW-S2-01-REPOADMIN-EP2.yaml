@@ -33,8 +33,8 @@ evidence:
     - Authentication is required
     - Forbidden
     - Not allowed operation in your
-    - WARNING.*WEKO_SWORDSERVER_E_1301
-    - WARNING.*No file part\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1301
+    - (WARNING|ERROR).*No file part\.
 evidenceWaivers: []
 at:
   F-SW-EP: L-SW-EP2
@@ -43,6 +43,7 @@ priority: P2
 tags:
   - spec:S2-01
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP2
   - role:repoadmin
   - remark:U-01

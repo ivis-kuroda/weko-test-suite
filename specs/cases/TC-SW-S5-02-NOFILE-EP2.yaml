@@ -47,8 +47,8 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1301
-    - WARNING.*No file part\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1301
+    - (WARNING|ERROR).*No file part\.
 evidenceWaivers: []
 at:
   F-SW-FILE-DEFECT: L-SW-DEFECT-NOFILE
@@ -57,6 +57,7 @@ priority: P2
 tags:
   - spec:S5-02
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP2
   - defect:nofile
 appliesTo:

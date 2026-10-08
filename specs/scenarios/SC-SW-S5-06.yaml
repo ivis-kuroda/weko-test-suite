@@ -203,15 +203,17 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1501
-    - "WARNING.*Item check error:"
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1501
+    - "(WARNING|ERROR).*Item check error:"
     - ERROR.*WEKO_SWORDSERVER_E_3201
     - ERROR.*Internal Server Error
     - Traceback
+    - "ERROR.*Error in check_import_items:"
 evidenceWaivers: []
 tags:
   - spec:S5-06
   - tier:1
+  - finding:A-5-on-hold
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

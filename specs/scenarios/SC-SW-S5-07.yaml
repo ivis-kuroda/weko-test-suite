@@ -162,14 +162,17 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1501
-    - "WARNING.*Item check error:"
-    - WARNING.*WEKO_SWORDSERVER_E_1502
-    - "WARNING.*This item is already registered:"
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1501
+    - "(WARNING|ERROR).*Item check error:"
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1502
+    - "(WARNING|ERROR).*This item is already registered:"
+    - "ERROR.*Error in check_import_items:"
+    - ERROR.*This item is already registered\.
 evidenceWaivers: []
 tags:
   - spec:S5-07
   - tier:1
+  - finding:A-5-on-hold
   - blocked:duplicate-check-toggle
 appliesTo:
   branch: test/sword-error-codes

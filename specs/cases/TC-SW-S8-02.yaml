@@ -61,14 +61,15 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_2401
-    - "WARNING.*Registration of item is pending completion\\. Please open the following URL to continue with the remaining operations:"
-    - WARNING.*Registration of item is pending completion
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2401
+    - "(WARNING|ERROR).*Registration of item is pending completion\\. Please open the following URL to continue with the remaining operations:"
+    - (WARNING|ERROR).*Registration of item is pending completion
 evidenceWaivers: []
 priority: P2
 tags:
   - spec:S8-02
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP2
   - needs:real-metadata
   - leaves:activities

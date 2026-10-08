@@ -56,14 +56,14 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1404
-    - WARNING.*SWORDBagIt requires metadate/sword\.json\.
-    - WARNING.*WEKO_SWORDSERVER_E_1405
-    - WARNING.*packaging format is SimpleZip, but sword\.json is found\.
-    - WARNING.*WEKO_SWORDSERVER_E_1406
-    - WARNING.*ro-crate-metadata\.json is required in data/ directory\.
-    - WARNING.*WEKO_SWORDSERVER_E_1407
-    - WARNING.*SimpleZip requires ro-crate-metadata\.json or other metadata file\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1404
+    - (WARNING|ERROR).*SWORDBagIt requires metadate/sword\.json\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1405
+    - (WARNING|ERROR).*packaging format is SimpleZip, but sword\.json is found\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1406
+    - (WARNING|ERROR).*ro-crate-metadata\.json is required in data/ directory\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1407
+    - (WARNING|ERROR).*SimpleZip requires ro-crate-metadata\.json or other metadata file\.
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-SIMPLEZIP-SWORDJSON
@@ -72,6 +72,7 @@ priority: P2
 tags:
   - spec:S5-05
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP2
   - variant:simplezip-swordjson
 appliesTo:

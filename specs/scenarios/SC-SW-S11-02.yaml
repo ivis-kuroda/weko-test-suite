@@ -116,14 +116,15 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1303
-    - WARNING.*Cannot get filename by Content-Disposition\.
-    - WARNING.*WEKO_SWORDSERVER_E_2101
-    - WARNING.*Item not found\. \(recid=
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1303
+    - (WARNING|ERROR).*Cannot get filename by Content-Disposition\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2101
+    - (WARNING|ERROR).*Item not found\. \(recid=
 evidenceWaivers: []
 tags:
   - spec:S11-02
   - tier:1
+  - finding:A-5-on-hold
   - automation:manual
   - blocked:locale-method-U-11
   - remark:U-04

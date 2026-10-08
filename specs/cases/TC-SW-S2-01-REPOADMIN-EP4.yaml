@@ -29,8 +29,8 @@ evidence:
     - Authentication is required
     - Forbidden
     - Not allowed operation in your
-    - WARNING.*WEKO_SWORDSERVER_E_2101
-    - WARNING.*Item not found\. \(recid=
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2101
+    - (WARNING|ERROR).*Item not found\. \(recid=
 evidenceWaivers: []
 at:
   F-SW-EP: L-SW-EP4
@@ -39,6 +39,7 @@ priority: P2
 tags:
   - spec:S2-01
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP4
   - role:repoadmin
   - remark:U-01

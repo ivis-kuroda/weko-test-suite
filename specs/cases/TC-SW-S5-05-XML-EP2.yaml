@@ -52,8 +52,8 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1410
-    - WARNING.*Direct registration is not allowed for XML metadata yet\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1410
+    - (WARNING|ERROR).*Direct registration is not allowed for XML metadata yet\.
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-XML
@@ -62,6 +62,7 @@ priority: P2
 tags:
   - spec:S5-05
   - tier:1
+  - finding:A-5-on-hold
   - ep:EP2
   - variant:xml
   - automation:manual

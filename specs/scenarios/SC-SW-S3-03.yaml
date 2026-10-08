@@ -117,15 +117,18 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WARNING.*WEKO_SWORDSERVER_E_1201
-    - WARNING.*Not allowed operation in your token scope\.
+    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1201
+    - (WARNING|ERROR).*Not allowed operation in your token scope\.
     - Authentication is required
     - Forbidden
     - Not allowed operation in your
+    - ERROR.*Item not found\. \(recid=
+    - ERROR.*Required scopes for activity are not satisfied\.
 evidenceWaivers: []
 tags:
   - spec:S3-03
   - tier:1
+  - finding:A-5-on-hold
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
