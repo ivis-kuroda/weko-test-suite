@@ -246,6 +246,23 @@ operations:
     headers:
       On-Behalf-Of: "{{param.onBehalfOf}}"
 
+  # ---- Fixtures generated on demand (see fixtures/README.md) ----
+  # For bodies that depend on a value only known at run time: an EP4 item whose
+  # id is a record created during the run, or a request of an exact size.
+  OP-FIXTURE-PUT-ITEM:
+    description: "Write an EP4 body whose single item carries the given id (consistency checks)."
+    executor: shell
+    run: ["uv", "run", "python", "seeds/build_fixtures.py", "put-item", "--id", "{{param.id}}", "--out", "{{param.out}}"]
+    params: [id, out]
+    timeoutMs: 60000
+
+  OP-FIXTURE-SIZED:
+    description: "Write a zip whose multipart body is exactly `size` bytes (S5-03; lowered limit only)."
+    executor: shell
+    run: ["uv", "run", "python", "seeds/build_fixtures.py", "sized", "--size", "{{param.size}}", "--filename", "{{param.filename}}", "--out", "{{param.out}}"]
+    params: [size, filename, out]
+    timeoutMs: 60000
+
   # ---- In-container helpers (see helpers/ and weko_suite_ext) ----
   # `cmd` is a helper command (create_token, snapshot, inject_fault, ...);
   # `params` is its JSON object as a string. The step's body is the helper's
