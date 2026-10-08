@@ -1,0 +1,19 @@
+id: F-SW-ROLE
+name: トークン所有者のロール
+description: S0-01 のロール別ユーザ。ロールごとのトークン①（C-D 用）。
+levels:
+  - id: L-SW-ROLE-SYSADMIN
+    name: システム管理者
+    absent: false
+  - id: L-SW-ROLE-REPOADMIN
+    name: リポジトリ管理者
+    absent: false
+  - id: L-SW-ROLE-COMADMIN
+    name: コミュニティ管理者
+    absent: false
+  - id: L-SW-ROLE-CONTRIBUTOR
+    name: コントリビュータ
+    absent: false
+  - id: L-SW-ROLE-GENERAL
+    name: 一般ユーザ
+    absent: false

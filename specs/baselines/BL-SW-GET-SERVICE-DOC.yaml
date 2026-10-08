@@ -1,0 +1,12 @@
+id: BL-SW-GET-SERVICE-DOC
+title: EP1 サービス文書の取得（C-D、トークン①）
+target:
+  surface: SWORD v3 API
+  action: GET /sword/service-document
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-SWORD-GET-SERVICE-DOC
+  params:
+    token: "{{env.SW_TOKEN_1}}"

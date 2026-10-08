@@ -1,0 +1,10 @@
+id: MX-SW-ROLE-EP
+title: S2-01 ロール × 全 EP
+axes:
+  rows: F-SW-ROLE
+  cols: F-SW-EP
+additional: []
+strategy: full
+exclusions: []
+viewpoints:
+  - VP-SW-AU-30

@@ -1,0 +1,13 @@
+id: BL-SW-DELETE-DIRECT
+title: EP5 Direct 削除（R4、トークン①）。R4 は削除で消費される
+target:
+  surface: SWORD v3 API
+  action: DELETE /sword/deposit/{recid}
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-SWORD-DELETE
+  params:
+    recid: "{{env.SW_R4}}"
+    token: "{{env.SW_TOKEN_1}}"

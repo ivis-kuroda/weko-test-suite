@@ -1,0 +1,19 @@
+id: F-SW-EP
+name: エンドポイント EP1〜EP5
+description: 全 5 エンドポイント。ベースラインが EP ごとに異なるため path は持たず、ケースに at で配置を宣言する。
+levels:
+  - id: L-SW-EP1
+    name: EP1 GET /sword/service-document
+    absent: false
+  - id: L-SW-EP2
+    name: EP2 POST /sword/service-document
+    absent: false
+  - id: L-SW-EP3
+    name: EP3 GET /sword/deposit/{recid}
+    absent: false
+  - id: L-SW-EP4
+    name: EP4 PUT /sword/deposit/{recid}
+    absent: false
+  - id: L-SW-EP5
+    name: EP5 DELETE /sword/deposit/{recid}
+    absent: false

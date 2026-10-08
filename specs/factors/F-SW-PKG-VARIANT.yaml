@@ -1,0 +1,22 @@
+id: F-SW-PKG-VARIANT
+name: Packaging・構成・形式の不正（S5-05 の入力）
+description: 非対応の Packaging／Content-Type／構成不正 3 種／XML メタデータ。
+levels:
+  - id: L-SW-PKGV-PACKAGING
+    name: 非対応の Packaging
+    absent: false
+  - id: L-SW-PKGV-CONTENT-TYPE
+    name: 非対応の Content-Type
+    absent: false
+  - id: L-SW-PKGV-BAGIT-NOMETA
+    name: SWORDBagIt でメタデータ欠落
+    absent: false
+  - id: L-SW-PKGV-SIMPLEZIP-SWORDJSON
+    name: SimpleZip に sword.json あり
+    absent: false
+  - id: L-SW-PKGV-ROCRATE-NOMETA
+    name: RO-Crate で ro-crate-metadata.json なし
+    absent: false
+  - id: L-SW-PKGV-XML
+    name: XML メタデータ
+    absent: false

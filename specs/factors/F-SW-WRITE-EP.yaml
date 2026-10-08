@@ -1,0 +1,10 @@
+id: F-SW-WRITE-EP
+name: 書き込みエンドポイント EP2／EP4
+description: EP2（POST）と EP4（PUT）。同じ入力を両方に送る観点で使う。
+levels:
+  - id: L-SW-WEP-EP2
+    name: EP2 POST
+    absent: false
+  - id: L-SW-WEP-EP4
+    name: EP4 PUT（R1）
+    absent: false

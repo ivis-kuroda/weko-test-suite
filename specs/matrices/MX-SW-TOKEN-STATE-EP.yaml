@@ -1,0 +1,10 @@
+id: MX-SW-TOKEN-STATE-EP
+title: S1-03 トークン状態 × 全 EP
+axes:
+  rows: F-SW-TOKEN-STATE
+  cols: F-SW-EP
+additional: []
+strategy: full
+exclusions: []
+viewpoints:
+  - VP-SW-AU-01

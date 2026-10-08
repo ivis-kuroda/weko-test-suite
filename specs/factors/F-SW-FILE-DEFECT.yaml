@@ -1,0 +1,16 @@
+id: F-SW-FILE-DEFECT
+name: ファイルの不備（S5-02 の 4 入力）
+description: (a) ファイルパートなし (b) ファイル未選択 (c) Content-Disposition なし (d) ファイル名不一致。
+levels:
+  - id: L-SW-DEFECT-NOFILE
+    name: (a) ファイルパートなし
+    absent: false
+  - id: L-SW-DEFECT-NOTSELECTED
+    name: (b) ファイル未選択（filename が空）
+    absent: false
+  - id: L-SW-DEFECT-NOCD
+    name: (c) Content-Disposition なし
+    absent: false
+  - id: L-SW-DEFECT-CDMISMATCH
+    name: (d) Content-Disposition と本文のファイル名が不一致
+    absent: false

@@ -1,0 +1,13 @@
+id: BL-SW-GET
+title: EP3 ステータス文書の取得（R1、トークン①）
+target:
+  surface: SWORD v3 API
+  action: GET /sword/deposit/{recid}
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-SWORD-GET-DEPOSIT
+  params:
+    recid: "{{env.SW_R1}}"
+    token: "{{env.SW_TOKEN_1}}"

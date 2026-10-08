@@ -1,0 +1,10 @@
+id: MX-SW-PKG-VARIANT-EP
+title: S5-05 Packaging・構成・形式の不正 × EP2／EP4
+axes:
+  rows: F-SW-PKG-VARIANT
+  cols: F-SW-WRITE-EP
+additional: []
+strategy: full
+exclusions: []
+viewpoints:
+  - VP-SW-BD-74

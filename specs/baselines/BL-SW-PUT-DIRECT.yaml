@@ -1,0 +1,18 @@
+id: BL-SW-PUT-DIRECT
+title: EP4 Direct 更新（R1、正常な SimpleZip、トークン①）
+target:
+  surface: SWORD v3 API
+  action: PUT /sword/deposit/{recid}
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-SWORD-PUT
+  params:
+    contentDisposition: attachment; filename=simplezip-normal.zip
+    digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+    file: fixtures/generated/simplezip-normal.zip
+    filename: simplezip-normal.zip
+    packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+    recid: "{{env.SW_R1}}"
+    token: "{{env.SW_TOKEN_1}}"

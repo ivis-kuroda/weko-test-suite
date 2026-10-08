@@ -1,0 +1,10 @@
+id: MX-SW-FILE-DEFECT-EP
+title: S5-02 ファイルの不備 × EP2／EP4
+axes:
+  rows: F-SW-FILE-DEFECT
+  cols: F-SW-WRITE-EP
+additional: []
+strategy: full
+exclusions: []
+viewpoints:
+  - VP-SW-BD-71

@@ -1,0 +1,10 @@
+id: F-SW-TOKEN-STATE
+name: トークン状態（未提示／無効）
+description: ④ Authorization ヘッダなし、③ 失効済みトークン。
+levels:
+  - id: L-SW-TOKEN-ABSENT
+    name: ④ 未提示
+    absent: false
+  - id: L-SW-TOKEN-REVOKED
+    name: ③ 失効済み
+    absent: false
