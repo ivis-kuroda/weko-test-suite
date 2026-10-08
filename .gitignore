@@ -10,3 +10,9 @@ auth.json
 
 # Snapshots taken from a running environment.
 snapshots/
+
+# Python tooling caches.
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
