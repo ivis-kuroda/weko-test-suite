@@ -1,0 +1,36 @@
+id: TC-SW-S12-04
+summary: "応答時間に大きな劣化がない（代表: EP3 の正常系）"
+baseline: BL-SW-GET
+overrides: []
+expect:
+  - kind: http_status
+    status: 200
+    viewpoints: []
+polarity: nominal
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore: []
+evidenceWaivers: []
+priority: P3
+tags:
+  - spec:S12-04
+  - tier:1
+  - ep:EP3
+  - automation:manual
+  - blocked:pre-change-baseline
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: manual
+viewpoints:
+  - VP-SW-CP-09
+note: "比較対象（S0-06 の改修前の応答時間）も『現行運用基準』の数値も仕様書にも設計書にもない。しきい値を作らないため durationMs の判定は書かず、200 であることだけを置いた。基準が決まれば result の compare（at: durationMs）を追加して自動化できる。エラー系の代表（S5-01 など）の応答時間も同様に実測して記録する。"

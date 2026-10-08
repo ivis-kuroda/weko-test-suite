@@ -1,0 +1,65 @@
+id: TC-SW-S5-02-NOTSELECTED-EP4
+summary: EP4 に (b) ファイル未選択（filename が空） を送ると 400、1302
+baseline: BL-SW-PUT-DIRECT
+overrides:
+  - path: action.params.filename
+    op: set
+    value: ""
+expect:
+  - kind: http_status
+    status: 400
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: keys
+      value:
+        - "@context"
+        - "@type"
+        - timestamp
+        - error
+      at: body
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: matches
+      pattern: "^WEKO_SWORDSERVER_E_1302: "
+      at: body.error
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      value: ContentMalformed
+      at: body.@type
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1302
+    - No\ selected\ file\.
+evidenceWaivers: []
+at:
+  F-SW-FILE-DEFECT: L-SW-DEFECT-NOTSELECTED
+  F-SW-WRITE-EP: L-SW-WEP-EP4
+priority: P2
+tags:
+  - spec:S5-02
+  - tier:1
+  - ep:EP4
+  - defect:notselected
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: manual
+viewpoints:
+  - VP-SW-BD-71
+note: EP4 は先に recid の存在確認があるため R1 は存在する状態にする（バンドル済みの R1 を使う）。

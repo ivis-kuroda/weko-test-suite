@@ -1,0 +1,71 @@
+id: TC-SW-S6-02
+summary: DOI 付与済みアイテム（R2）の EP5 は 400、2106。削除されない
+baseline: BL-SW-DELETE-DIRECT
+overrides:
+  - path: action.params.recid
+    op: set
+    value: "{{env.SW_R2}}"
+expect:
+  - kind: http_status
+    status: 400
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: keys
+      value:
+        - "@context"
+        - "@type"
+        - timestamp
+        - error
+      at: body
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: matches
+      pattern: "^WEKO_SWORDSERVER_E_2106: "
+      at: body.error
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      value: BadRequest
+      at: body.@type
+    viewpoints: []
+  - kind: operation_result
+    operation: OP-SWORD-GET-DEPOSIT
+    params:
+      recid: "{{env.SW_R2}}"
+      token: "{{env.SW_TOKEN_1}}"
+    assert:
+      kind: equals
+      value: 200
+      at: status
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_2106
+    - Cannot\ delete\ item\ with\ DOI\.
+evidenceWaivers: []
+priority: P2
+tags:
+  - spec:S6-02
+  - tier:1
+  - ep:EP5
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: manual
+viewpoints:
+  - VP-SW-EG-06
+note: 409・500 にならないことは status 400 の一致で見る。複数条件の優先順位は U-09（要確認）で本ケースは扱わない。
