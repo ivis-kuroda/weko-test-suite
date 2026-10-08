@@ -1,0 +1,18 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+
+#: errors.py:1
+msgid "ACTIVITY_SCOPE_INSUFFICIENT"
+msgstr "Not allowed operation in your token scope."
+
+msgid "ON_BEHALF_OF_USER_NOT_FOUND"
+msgstr ""
+"No user found "
+"by On-Behalf-Of."
+
+msgid "ITEM_LOCKED"
+msgstr "Item is locked."
+
+#~ msgid "OBSOLETE"
+#~ msgstr "gone"

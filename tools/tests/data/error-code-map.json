@@ -1,0 +1,6 @@
+[
+  {"code": "1201", "msgid": "ACTIVITY_SCOPE_INSUFFICIENT", "status": 403},
+  {"code": "1203", "msgid": "ON_BEHALF_OF_USER_NOT_FOUND", "status": 400},
+  {"code": "2201", "msgid": "ITEM_LOCKED", "status": 409},
+  {"code": "3108", "msgid": "DATABASE_UNAVAILABLE", "status": 503}
+]

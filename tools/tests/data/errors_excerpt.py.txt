@@ -1,0 +1,41 @@
+"""Hand-written excerpt in the shape of weko_swordserver/errors.py (test fixture)."""
+
+from enum import Enum
+
+from flask_babelex import lazy_gettext as _
+
+
+class ErrorType(Enum):
+    BadRequest = ("BadRequest", 400, "BadRequest")
+    Forbidden = ("Forbidden", 403, "Forbidden")
+    Conflict = ("Conflict", 409, "Conflict")
+    ServiceUnavailable = ("ServiceUnavailable", 503, "ServiceUnavailable")
+
+    def __init__(self, type, code, httpName):
+        self.type = type
+        self.code = code
+        self.httpName = httpName
+
+
+class ErrorSpec:
+    def __init__(self, code, msgid, error_type):
+        self.code, self.msgid, self.error_type = code, msgid, error_type
+
+
+class AuthorizationException(Exception):
+    """12xx errors."""
+
+    ACTIVITY_SCOPE_INSUFFICIENT = ErrorSpec("1201", _("ACTIVITY_SCOPE_INSUFFICIENT"), ErrorType.Forbidden)
+    ON_BEHALF_OF_USER_NOT_FOUND = ErrorSpec("1203", _("ON_BEHALF_OF_USER_NOT_FOUND"), ErrorType.BadRequest)
+
+
+class ConcurrencyException(Exception):
+    """22xx errors."""
+
+    ITEM_LOCKED = ErrorSpec("2201", _("ITEM_LOCKED"), ErrorType.Conflict)
+
+
+class InternalProcessException(Exception):
+    """31xx errors."""
+
+    DATABASE_UNAVAILABLE = ErrorSpec("3108", _("DATABASE_UNAVAILABLE"), ErrorType.ServiceUnavailable)
