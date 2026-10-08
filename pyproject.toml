@@ -1,0 +1,39 @@
+# Project for the generated tests and the host-side plugin code.
+#
+# The Python test runtime comes from the sibling checkout of agentic-test-hub
+# (see docs/HUB.md and hub.lock). `tools/` keeps its own pyproject so it still
+# works stand-alone; this project simply lets one `uv sync` cover everything
+# `scripts/check.sh` runs.
+[project]
+name = "weko-test-suite"
+version = "0.0.0"
+description = "Generated tests, fixtures and host-side extension for testing WEKO3 with agentic-test-hub"
+requires-python = ">=3.11"
+dependencies = [
+  "agentic-test-hub-runner",
+  # tools/import_viewpoints.py
+  "openpyxl>=3.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+agentic-test-hub-runner = { path = "../agentic-test-hub/python/agentic-test-hub-runner", editable = true }
+
+[tool.pytest.ini_options]
+# `.` makes `weko_suite_ext` importable (generated tests import it by that
+# name); tools/ and seeds/ are plain script directories.
+pythonpath = [".", "tools", "seeds"]
+testpaths = ["tools/tests", "seeds/tests", "tests/unit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["tests/generated", "helpers"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

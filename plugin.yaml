@@ -2,34 +2,43 @@
 #
 # Declares everything agentic-test-hub needs to act on this target: where to
 # reach it, what can be done to it, and how to tell what state it is in. The
-# hub itself knows only four ways to act — run a command, make a request,
-# query a database, drive a browser — so every entry below reduces to one of
-# those.
+# hub itself knows only four ways to act (run a command, make a request,
+# query a database, drive a browser), plus the `extension` escape hatch used
+# here for the in-container helpers; every entry below reduces to one of them.
 #
 # Placeholders resolve from the environment (`{{env.X}}`), from an operation's
-# arguments (`{{param.x}}`), or from values an earlier scenario step produced
-# (`{{step.x}}`). An unresolved placeholder fails the run rather than
-# substituting nothing.
+# arguments (`{{param.x}}`), from values an earlier scenario step produced
+# (`{{step.x}}`) and from the run (`{{run.startedAt}}`). An unresolved
+# placeholder fails the run rather than substituting nothing, except an
+# `optionalParams` entry, which drops the header or multipart part that names
+# it. That is how a case says "this header is not sent": a `remove` override
+# on the parameter.
+#
+# Target facts (WEKO3 SWORD v3, weko-swordserver, blueprint prefix /sword):
+#   EP1 GET    /sword/service-document
+#   EP2 POST   /sword/service-document      multipart `file` part
+#   EP3 GET    /sword/deposit/<recid>
+#   EP4 PUT    /sword/deposit/<recid>       same request shape as EP2
+#   EP5 DELETE /sword/deposit/<recid>
+# Error bodies carry @context, @type, timestamp and
+# error = "WEKO_SWORDSERVER_E_xxxx: message".
 apiVersion: "1"
 name: weko
-description: WEKO3 repository software, run under docker-compose
+description: WEKO3 repository software (SWORD v3 API), run under docker-compose
+extensionModule: weko_suite_ext
 
 connections:
-  # Pgpool-II fronts the cluster; tests connect through it as the application
-  # does, so they exercise the same path.
-  main-db:
-    kind: postgres
-    url: "{{env.WEKO_DB_URL}}"
+  # No `main-db` / `search` connection on purpose. PostgreSQL sits behind
+  # Pgpool-II and its schema is WEKO's business; reading or changing rows goes
+  # through the in-container helpers (OP-HELPER) so the application's own
+  # models are used and the host needs no psql, port or credentials.
+  # Likewise the application's Elasticsearch is never a test target (a test
+  # that wipes an index is routine, doing it to real data is not); a separate
+  # test cluster gets its own connection when a case needs one.
 
-  # Reached over REST rather than through a client library: the official
-  # clients reject servers outside a narrow version range, which would pin
-  # this suite to one server major.
-  search:
-    kind: http
-    baseUrl: "{{env.WEKO_SEARCH_URL}}"
-    headers:
-      Content-Type: application/json
-
+  # UI app: nginx 443 (self-signed certificate: set SSL_CERT_FILE) or the web
+  # container directly on 5001. Use 5001 for upload-size boundary cases, since
+  # nginx may reject large bodies with its own 413 before WEKO sees them.
   api:
     kind: http
     baseUrl: "{{env.WEKO_BASE_URL}}"
@@ -38,8 +47,352 @@ connections:
     kind: browser
     baseUrl: "{{env.WEKO_BASE_URL}}"
 
-operations: {}
+operations:
+  # ---- EP1: service document ----
+  OP-SWORD-GET-SERVICE-DOC:
+    description: "EP1. Bearer token optional so a case can omit it."
+    executor: http
+    connection: api
+    method: GET
+    path: /sword/service-document
+    optionalParams: [token, onBehalfOf]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  OP-SWORD-GET-SERVICE-DOC-UNAUTH:
+    description: "EP1 with no Authorization header at all."
+    executor: http
+    connection: api
+    method: GET
+    path: /sword/service-document
+    optionalParams: [onBehalfOf]
+    headers:
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  # ---- EP2 / EP4: packaged deposit ----
+  # `file` is a path relative to this repository (see fixtures/); `filename` is
+  # the name announced on the multipart part (may be ""). The request-level
+  # headers are separate optionals, because the server compares the part's
+  # filename with the one in Content-Disposition, and cases must be able to
+  # make them differ or leave either out. Expected values:
+  #   contentDisposition  attachment; filename=<same as filename>
+  #   packaging           http://purl.org/net/sword/3.0/package/SimpleZip | SWORDBagIt
+  #   digest              SHA-256=<hex>  (seeds/build_fixtures.py: digest_header)
+  # The multipart Content-Type is set by the HTTP library; the server only
+  # accepts application/zip or multipart/form-data, so a bad request
+  # Content-Type is not expressible here.
+  OP-SWORD-POST:
+    description: "EP2. Create from packaged content."
+    executor: http
+    connection: api
+    method: POST
+    path: /sword/service-document
+    params: [file, filename]
+    optionalParams: [token, contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: file
+        file: "{{param.file}}"
+        filename: "{{param.filename}}"
+
+  OP-SWORD-POST-UNAUTH:
+    description: "EP2 with no Authorization header."
+    executor: http
+    connection: api
+    method: POST
+    path: /sword/service-document
+    params: [file, filename]
+    optionalParams: [contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: file
+        file: "{{param.file}}"
+        filename: "{{param.filename}}"
+
+  OP-SWORD-POST-NOFILE:
+    description: "EP2 whose body has no `file` part, only a harmless form field (server: file part missing)."
+    executor: http
+    connection: api
+    method: POST
+    path: /sword/service-document
+    optionalParams: [token, contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: note
+        value: "no file part"
+
+  # ---- EP3: status document ----
+  OP-SWORD-GET-DEPOSIT:
+    description: "EP3. Status document of one record."
+    executor: http
+    connection: api
+    method: GET
+    path: /sword/deposit/{{param.recid}}
+    params: [recid]
+    optionalParams: [token, onBehalfOf]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  OP-SWORD-GET-DEPOSIT-UNAUTH:
+    description: "EP3 with no Authorization header."
+    executor: http
+    connection: api
+    method: GET
+    path: /sword/deposit/{{param.recid}}
+    params: [recid]
+    optionalParams: [onBehalfOf]
+    headers:
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  # ---- EP4: replace ----
+  OP-SWORD-PUT:
+    description: "EP4. Replace a record with packaged content."
+    executor: http
+    connection: api
+    method: PUT
+    path: /sword/deposit/{{param.recid}}
+    params: [recid, file, filename]
+    optionalParams: [token, contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: file
+        file: "{{param.file}}"
+        filename: "{{param.filename}}"
+
+  OP-SWORD-PUT-UNAUTH:
+    description: "EP4 with no Authorization header."
+    executor: http
+    connection: api
+    method: PUT
+    path: /sword/deposit/{{param.recid}}
+    params: [recid, file, filename]
+    optionalParams: [contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: file
+        file: "{{param.file}}"
+        filename: "{{param.filename}}"
+
+  OP-SWORD-PUT-NOFILE:
+    description: "EP4 whose body has no `file` part."
+    executor: http
+    connection: api
+    method: PUT
+    path: /sword/deposit/{{param.recid}}
+    params: [recid]
+    optionalParams: [token, contentDisposition, packaging, digest, onBehalfOf, metadataFormat]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      Content-Disposition: "{{param.contentDisposition}}"
+      Packaging: "{{param.packaging}}"
+      Digest: "{{param.digest}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+      Metadata-Format: "{{param.metadataFormat}}"
+    multipart:
+      - name: note
+        value: "no file part"
+
+  # ---- EP5: delete ----
+  OP-SWORD-DELETE:
+    description: "EP5. Delete a record."
+    executor: http
+    connection: api
+    method: DELETE
+    path: /sword/deposit/{{param.recid}}
+    params: [recid]
+    optionalParams: [token, onBehalfOf]
+    headers:
+      Authorization: "Bearer {{param.token}}"
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  OP-SWORD-DELETE-UNAUTH:
+    description: "EP5 with no Authorization header."
+    executor: http
+    connection: api
+    method: DELETE
+    path: /sword/deposit/{{param.recid}}
+    params: [recid]
+    optionalParams: [onBehalfOf]
+    headers:
+      On-Behalf-Of: "{{param.onBehalfOf}}"
+
+  # ---- Fixtures generated on demand (see fixtures/README.md) ----
+  # For bodies that depend on a value only known at run time: an EP4 item whose
+  # id is a record created during the run, or a request of an exact size.
+  OP-FIXTURE-PUT-ITEM:
+    description: "Write an EP4 body whose single item carries the given id (consistency checks)."
+    executor: shell
+    run: ["uv", "run", "python", "seeds/build_fixtures.py", "put-item", "--id", "{{param.id}}", "--out", "{{param.out}}"]
+    params: [id, out]
+    timeoutMs: 60000
+
+  OP-FIXTURE-SIZED:
+    description: "Write a zip whose multipart body is exactly `size` bytes (S5-03; lowered limit only)."
+    executor: shell
+    run: ["uv", "run", "python", "seeds/build_fixtures.py", "sized", "--size", "{{param.size}}", "--filename", "{{param.filename}}", "--out", "{{param.out}}"]
+    params: [size, filename, out]
+    timeoutMs: 60000
+
+  # ---- In-container helpers (see helpers/ and weko_suite_ext) ----
+  # `cmd` is a helper command (create_token, snapshot, inject_fault, ...);
+  # `params` is its JSON object as a string. The step's body is the helper's
+  # envelope: {"ok": true, "result": ...} or {"ok": false, "error": {...}}.
+  OP-HELPER:
+    description: "Run one command of the in-container helper scripts (docker exec)."
+    executor: extension
+    handler: helper
+    params: [cmd]
+    optionalParams: [params]
+
+  # ---- Docker (host side; container names come from the environment) ----
+  # Argument lists, never shell strings: a value cannot become syntax.
+  # `docker logs` writes the container's stderr to stderr; the hub reads both.
+  OP-DOCKER-LOGS:
+    description: "Container log lines since a UTC timestamp (RFC 3339, e.g. {{run.startedAt}})."
+    executor: shell
+    run: ["docker", "logs", "--since", "{{param.since}}", "{{param.container}}"]
+    params: [container, since]
+    timeoutMs: 60000
+
+  # The Redis DB number of the session/lock store is WEKO configuration
+  # (ACCOUNTS_SESSION_REDIS_DB_NO); the case supplies it.
+  OP-REDIS-CLI:
+    description: "One single-key redis-cli command (GET, EXISTS, TTL, DEL, ...) in the Redis container."
+    executor: shell
+    run: ["docker", "exec", "-i", "{{env.WEKO_REDIS_CONTAINER}}", "redis-cli", "-n", "{{param.db}}", "{{param.command}}", "{{param.key}}"]
+    params: [db, command, key]
+    timeoutMs: 30000
+
+  OP-REDIS-SETEX:
+    description: "Set a Redis key with an expiry (S0-11 lock simulation)."
+    executor: shell
+    run: ["docker", "exec", "-i", "{{env.WEKO_REDIS_CONTAINER}}", "redis-cli", "-n", "{{param.db}}", "SETEX", "{{param.key}}", "{{param.seconds}}", "{{param.value}}"]
+    params: [db, key, seconds, value]
+    timeoutMs: 30000
+
+  # Fault injection: stopping the DB, Redis or Elasticsearch container. Always
+  # pair a stop with a start (scenario cleanup), or later cases fail for
+  # reasons unrelated to what they test. With the DB down even a valid token
+  # fails at token lookup (503), not as 401.
+  OP-DOCKER-STOP:
+    description: "Stop a container."
+    executor: shell
+    run: ["docker", "stop", "{{param.container}}"]
+    params: [container]
+    timeoutMs: 120000
+
+  OP-DOCKER-START:
+    description: "Start a stopped container."
+    executor: shell
+    run: ["docker", "start", "{{param.container}}"]
+    params: [container]
+    timeoutMs: 120000
+
+  OP-DOCKER-RESTART:
+    description: "Restart a container (needed after changing application configuration, e.g. the upload limit)."
+    executor: shell
+    run: ["docker", "restart", "{{param.container}}"]
+    params: [container]
+    timeoutMs: 300000
 
 states: {}
 
-evidence: {}
+# How each evidence channel is read. The hub reads a collector before and
+# after the action (when saving evidence) and, with timing before_and_after,
+# judges only the lines added in between.
+evidence:
+  # Application log of the web container since this run started. WEKO logs
+  # every rejected request with current_app.logger.error, so error cases will
+  # list ERROR lines here; a case marks the expected ones with an evidence
+  # `ignore` pattern.
+  app_log:
+    operation: OP-DOCKER-LOGS
+    params:
+      container: "{{env.WEKO_WEB_CONTAINER}}"
+      since: "{{run.startedAt}}"
+
+  db_log:
+    operation: OP-DOCKER-LOGS
+    params:
+      container: "{{env.WEKO_DB_CONTAINER}}"
+      since: "{{run.startedAt}}"
+
+  # Table snapshot through the helper. Informational under the policy below.
+  db_records:
+    operation: OP-HELPER
+    params:
+      cmd: snapshot
+      params: "{}"
+
+# Saved evidence is meant to be passed around for review. The hub already
+# masks Authorization / Cookie / Set-Cookie / X-API-Key and Bearer tokens.
+redact:
+  headers:
+    - "^authorization$"
+    - "^cookie$"
+    # On-Behalf-Of may carry a personal access token instead of an e-mail.
+    - "^on-behalf-of$"
+  patterns:
+    - "Bearer\\s+[A-Za-z0-9._~+/=-]+"
+    # Tokens the helpers mint are prefixed, so they stay recognisable in logs.
+    - "WEKO_TEST_TOKEN_[A-Za-z0-9_-]+"
+
+# Only the channels that can actually decide a verdict bind it. Read from the
+# hub's runner: db_records `expected_change`/`no_residual_change`,
+# app_log `expected_error`, `screenshot` `matches_expectation` and the
+# network `*_response` conditions need observation fields nothing fills in
+# yet, so under the default policy every case would stay inconclusive. And a
+# verdict with no deciding channel is inconclusive too, so error cases need
+# app_log to decide: `clean`, with the expected ERROR line suppressed per case.
+# A missing "expected" error is caught by the case's own expectation on the
+# log (operation_result), not by the policy.
+policy:
+  id: weko-sword-log-bound
+  title: SWORD API cases judged on the web application log; other channels recorded for review
+  rules:
+    nominal:
+      screenshot: informational
+      browser_console: informational
+      browser_network: informational
+      db_records: informational
+      app_log: clean
+      db_log: informational
+    error:
+      screenshot: informational
+      browser_console: informational
+      browser_network: informational
+      db_records: informational
+      app_log: clean
+      db_log: informational
+  insufficientAlone: [screenshot]
+  nonWaivable: [app_log]

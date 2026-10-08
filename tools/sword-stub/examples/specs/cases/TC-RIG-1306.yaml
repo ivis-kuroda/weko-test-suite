@@ -1,0 +1,36 @@
+id: TC-RIG-1306
+summary: rig only - a wrong Digest is rejected with 412 and code 1306
+baseline: BL-RIG-POST
+overrides:
+  - path: action.params.digest
+    op: set
+    value: "SHA-256=0000"
+expect:
+  - kind: http_status
+    status: 412
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: contains
+      at: body.error
+      value: "WEKO_SWORDSERVER_E_1306: "
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      at: body.@type
+      value: DigestMismatch
+    viewpoints: []
+polarity: error
+evidence:
+  timing: before_and_after
+  ignore:
+    - "Failed to verify request body and digest"
+evidenceWaivers: []
+priority: P2
+tags:
+  - rig-only
+automation:
+  status: manual
+viewpoints:
+  - VP-RIG-01

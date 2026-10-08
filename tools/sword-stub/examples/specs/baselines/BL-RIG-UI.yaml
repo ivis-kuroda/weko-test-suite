@@ -1,0 +1,11 @@
+id: BL-RIG-UI
+title: rig only - sign in to the stub admin screen and revoke a token
+target:
+  surface: stub admin screen
+  action: sign in, revoke a token, log a console error
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-RIG-ADMIN-FLOW
+  params: {}

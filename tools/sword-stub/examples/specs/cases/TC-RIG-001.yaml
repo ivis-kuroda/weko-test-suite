@@ -1,0 +1,25 @@
+id: TC-RIG-001
+summary: rig only - the baseline deposit is accepted
+baseline: BL-RIG-POST
+overrides: []
+expect:
+  - kind: http_status
+    status: 201
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: contains
+      at: headers.location
+      value: /sword/deposit/
+    viewpoints: []
+polarity: nominal
+evidence:
+  timing: before_and_after
+evidenceWaivers: []
+priority: P2
+tags:
+  - rig-only
+automation:
+  status: manual
+viewpoints:
+  - VP-RIG-01

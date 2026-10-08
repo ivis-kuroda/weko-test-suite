@@ -1,0 +1,10 @@
+# Helpers run on WEKO's Python 3.6; ruff's oldest target is py37, so the
+# AST test (tests/test_py36_syntax.py) is the authority for 3.6 syntax.
+line-length = 100
+target-version = "py37"
+
+[lint]
+select = ["E", "F", "I", "B"]
+
+[lint.isort]
+known-first-party = ["contract", "registry", "appctx", "faultlib"]

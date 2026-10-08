@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  check:
+    # The suite is built and checked against the sibling agentic-test-hub
+    # checkout pinned in hub.lock (see docs/HUB.md), so both repositories are
+    # laid out side by side, exactly as on a developer machine:
+    #   $GITHUB_WORKSPACE/weko-test-suite
+    #   $GITHUB_WORKSPACE/agentic-test-hub
+    # The hub is public; the default GITHUB_TOKEN is enough.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: weko-test-suite
+
+      - name: Read the hub pin
+        id: hub
+        run: echo "sha=$(grep '^sha=' weko-test-suite/hub.lock | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ivis-kuroda/agentic-test-hub
+          ref: ${{ steps.hub.outputs.sha }}
+          path: agentic-test-hub
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: agentic-test-hub/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: agentic-test-hub/.node-version
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install the hub
+        working-directory: agentic-test-hub
+        run: pnpm install --frozen-lockfile
+
+      - name: Install the suite
+        working-directory: weko-test-suite
+        run: uv sync --frozen
+
+      - name: Check
+        working-directory: weko-test-suite
+        env:
+          STRICT_HUB: "1"
+        run: scripts/check.sh

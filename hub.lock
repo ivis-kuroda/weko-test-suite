@@ -1,0 +1,6 @@
+# The agentic-test-hub commit this suite is generated and checked against.
+# Read by scripts/bootstrap-hub.sh, scripts/gen-test.sh and CI. Bump it
+# deliberately (and re-run scripts/check.sh) when the hub gains something
+# this repository needs.
+repo=https://github.com/ivis-kuroda/agentic-test-hub.git
+sha=78dd13a81b67b9cefd056b43aa0bcd89fee9887b

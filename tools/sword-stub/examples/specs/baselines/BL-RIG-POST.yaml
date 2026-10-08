@@ -1,0 +1,17 @@
+id: BL-RIG-POST
+title: rig only - a normal SimpleZip deposit with a valid token
+target:
+  surface: SWORD API (stub)
+  action: create an item from a SimpleZip
+preconditions: []
+config: {}
+context: {}
+action:
+  operation: OP-SWORD-POST
+  params:
+    file: fixtures/generated/simplezip-normal.zip
+    filename: simplezip-normal.zip
+    token: STUBTOKEN-direct-admin
+    contentDisposition: "attachment; filename=simplezip-normal.zip"
+    packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+    digest: "SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74"

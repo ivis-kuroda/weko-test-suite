@@ -1,0 +1,47 @@
+  # ---- rig only: appended to a COPY of plugin.yaml by make_rig_plugin.py ----
+  # plugin.yaml has no browser operation of its own (see docs/stub.md, findings).
+  OP-RIG-ADMIN-FLOW:
+    description: "Rig only. Sign in to the stub admin screen, revoke a token, log a console error."
+    executor: browser
+    connection: ui
+    steps:
+      - action: goto
+        url: /stub-admin/
+      - action: fill
+        selector: "[data-testid=login-user]"
+        value: admin
+      - action: fill
+        selector: "[data-testid=login-password]"
+        value: "{{env.RIG_ADMIN_PASSWORD}}"
+      - action: click
+        selector: "[data-testid=login-submit]"
+      - action: waitFor
+        selector: "[data-testid=revoke-contributor]"
+      - action: click
+        selector: "[data-testid=revoke-contributor]"
+      - action: waitFor
+        selector: "[data-testid=status-contributor]:has-text('revoked')"
+      - action: click
+        selector: "[data-testid=log-console-error]"
+
+  # plugin.yaml's OP-SWORD-GET-DEPOSIT / OP-SWORD-DELETE take `recid` and `token` as params, but a
+  # step's `action.params` reach the `param` scope unrendered, so `{{step.recid}}` and
+  # `{{env.X}}` written there stay literal text. These two read the step and env scopes directly
+  # (see docs/stub.md, findings).
+  OP-RIG-GET-DEPOSIT-STEP:
+    description: "Rig only. EP3 for the recid a previous step produced."
+    executor: http
+    connection: api
+    method: GET
+    path: /sword/deposit/{{step.recid}}
+    headers:
+      Authorization: "Bearer {{env.RIG_TOKEN}}"
+
+  OP-RIG-DELETE-STEP:
+    description: "Rig only. EP5 for the recid a previous step produced."
+    executor: http
+    connection: api
+    method: DELETE
+    path: /sword/deposit/{{step.recid}}
+    headers:
+      Authorization: "Bearer {{env.RIG_TOKEN}}"

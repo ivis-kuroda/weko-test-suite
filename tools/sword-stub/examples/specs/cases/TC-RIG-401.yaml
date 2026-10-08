@@ -1,0 +1,29 @@
+id: TC-RIG-401
+summary: rig only - no Authorization header is rejected with 401 and no WEKO code
+baseline: BL-RIG-POST
+overrides:
+  - path: action.params.token
+    op: remove
+expect:
+  - kind: http_status
+    status: 401
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      at: body.error
+      value: Authentication is required.
+    viewpoints: []
+polarity: error
+evidence:
+  timing: before_and_after
+  ignore:
+    - "Authentication is required"
+evidenceWaivers: []
+priority: P2
+tags:
+  - rig-only
+automation:
+  status: manual
+viewpoints:
+  - VP-RIG-01
