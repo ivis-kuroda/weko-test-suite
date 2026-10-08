@@ -1,0 +1,61 @@
+id: TC-SW-S1-03-REVOKED-EP1
+summary: 失効済みトークン③で EP1 を呼ぶと 401 になり、独自コードが付かない
+baseline: BL-SW-GET-SERVICE-DOC
+overrides:
+  - path: action.params.token
+    op: set
+    value: "{{env.SW_TOKEN_REVOKED}}"
+expect:
+  - kind: http_status
+    status: 401
+    alsoAccepts:
+      - 403
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: matches
+      pattern: ^(?!WEKO_SWORDSERVER_E_)
+      at: body.error
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: one_of
+      values:
+        - AuthenticationRequired
+        - Unauthorized
+      at: body.@type
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - Authentication is required
+    - Forbidden
+    - Not allowed operation in your
+evidenceWaivers: []
+at:
+  F-SW-EP: L-SW-EP1
+  F-SW-TOKEN-STATE: L-SW-TOKEN-REVOKED
+priority: P2
+tags:
+  - spec:S1-03
+  - tier:1
+  - ep:EP1
+  - token:revoked
+  - remark:U-21
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: manual
+viewpoints:
+  - VP-SW-AU-01
+note: "U-21: 無効トークンが 401 か 403 かは S0-06 の改修前実測で確定する。実測まで 401 を期待し 403 も許容（alsoAccepts）。"

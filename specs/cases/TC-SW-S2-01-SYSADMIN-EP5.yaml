@@ -1,0 +1,52 @@
+id: TC-SW-S2-01-SYSADMIN-EP5
+summary: SYSADMIN のトークン①で EP5 を呼ぶ。許可なら 2101、不許可なら 403（独自コードなし）。U-01 要確認
+baseline: BL-SW-DELETE-DIRECT
+overrides:
+  - path: action.params.token
+    op: set
+    value: "{{env.SW_TOKEN_ROLE_SYSADMIN}}"
+  - path: action.params.recid
+    op: set
+    value: "{{env.SW_R9}}"
+expect:
+  - kind: http_status
+    status: 404
+    alsoAccepts:
+      - 403
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - Authentication is required
+    - Forbidden
+    - Not allowed operation in your
+    - WEKO_SWORDSERVER_E_2101
+    - Item\ not\ found\.\ \(recid=
+evidenceWaivers: []
+at:
+  F-SW-EP: L-SW-EP5
+  F-SW-ROLE: L-SW-ROLE-SYSADMIN
+priority: P2
+tags:
+  - spec:S2-01
+  - tier:1
+  - ep:EP5
+  - role:sysadmin
+  - remark:U-01
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: manual
+viewpoints:
+  - VP-SW-AU-30
+note: ロール別の可否は U-01（要確認）。改修前ベースライン（S0-06）が無いため、不許可と確定できるのは一般ユーザの EP2/EP4/EP5（docs/BASELINE.md の想定）のみ。それ以外のロールは許可（その EP の通常結果）または 403（コードなし）を許容し、実測値を記録する。非破壊にするため EP2 はファイルパートなし（許可なら 1301）、EP4/EP5 は存在しない recid R9（許可なら 2101）で呼ぶ（認可はこれらの検査より先）。仕様書の『正常ファイル／R1／R4』からの変更は TIER1-STATUS の判断事項を参照。
