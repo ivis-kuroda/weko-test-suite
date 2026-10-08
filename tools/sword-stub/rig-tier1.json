@@ -1,0 +1,177 @@
+{
+  "tokens": {
+    "RIGTOKEN-1": {
+      "name": "t1",
+      "client": "client-direct",
+      "role": "System Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-2": {
+      "name": "t2",
+      "client": "client-direct",
+      "role": "System Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete"
+      ]
+    },
+    "RIGTOKEN-5": {
+      "name": "t5",
+      "client": "client-direct",
+      "role": "System Administrator",
+      "scopes": []
+    },
+    "RIGTOKEN-REVOKED": {
+      "name": "revoked",
+      "client": "client-direct",
+      "role": "System Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-W": {
+      "name": "w",
+      "client": "client-workflow",
+      "role": "System Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-W2": {
+      "name": "w2",
+      "client": "client-workflow",
+      "role": "System Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete"
+      ]
+    },
+    "RIGTOKEN-ROLE-REPOADMIN": {
+      "name": "role-repoadmin",
+      "client": "client-direct",
+      "role": "Repository Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-ROLE-COMADMIN": {
+      "name": "role-comadmin",
+      "client": "client-direct",
+      "role": "Community Administrator",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-ROLE-CONTRIBUTOR": {
+      "name": "role-contributor",
+      "client": "client-direct",
+      "role": "Contributor",
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    },
+    "RIGTOKEN-ROLE-GENERAL": {
+      "name": "role-general",
+      "client": "client-direct",
+      "role": null,
+      "scopes": [
+        "deposit:write",
+        "deposit:actions",
+        "item:create",
+        "item:update",
+        "item:delete",
+        "user:activity"
+      ]
+    }
+  },
+  "revoked": [
+    "RIGTOKEN-REVOKED"
+  ],
+  "clients": {
+    "client-direct": {
+      "name": "direct client",
+      "register_type": "Direct",
+      "duplicate_check": false
+    },
+    "client-workflow": {
+      "name": "workflow client",
+      "register_type": "Workflow"
+    }
+  },
+  "records": {
+    "900001": {
+      "title": "ath state record R1",
+      "doi": false
+    },
+    "900002": {
+      "title": "ath state record R2",
+      "doi": true
+    },
+    "900004": {
+      "title": "ath state record R4",
+      "doi": false
+    },
+    "900005": {
+      "title": "ath state record R5",
+      "doi": false
+    },
+    "900006": {
+      "title": "ath state record R6",
+      "doi": false
+    },
+    "900007": {
+      "title": "ath state record R7",
+      "doi": false
+    },
+    "900008": {
+      "title": "ath state record R8",
+      "doi": false
+    }
+  },
+  "next_recid": 910000,
+  "settings": {
+    "accept_packaging": [
+      "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "http://purl.org/net/sword/3.0/package/SWORDBagIt"
+    ],
+    "faithful_log": false
+  }
+}
