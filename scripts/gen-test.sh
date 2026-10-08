@@ -3,8 +3,9 @@
 #
 #   scripts/gen-test.sh TC-SWORD-001 [--force]
 #
-# Output goes to tests/generated/<module>.py, where <module> is the id as a
-# Python identifier (TC-SWORD-001 -> tc_sword_001). Extra arguments are passed
+# Output goes to tests/generated/test_<module>.py, where <module> is the id as a
+# Python identifier (TC-SWORD-001 -> test_tc_sword_001.py). The test_ prefix is what
+# pytest collects by default (docs/stub.md finding F-4). Extra arguments are passed
 # to ath-generate-test. A generated case is written back to specs/ as
 # automation.status=generated; review and commit that change with the test.
 set -euo pipefail
@@ -33,5 +34,5 @@ exec node "$HUB_DIR/packages/cli/bin/generate-test.ts" "$id" \
   --plugin-root . \
   --lang python \
   --python-extensions-module weko_suite_ext \
-  --out "tests/generated/${module}.py" \
+  --out "tests/generated/test_${module}.py" \
   "$@"

@@ -37,7 +37,7 @@ uv sync                      # Python 環境（runner・pytest・ruff）
 ## テストを生成する
 
 ```sh
-scripts/gen-test.sh TC-SWORD-001          # tests/generated/tc_sword_001.py ができる
+scripts/gen-test.sh TC-SWORD-001          # tests/generated/test_tc_sword_001.py ができる
 scripts/gen-test.sh TC-SWORD-001 --force  # 再生成
 ```
 
@@ -47,7 +47,7 @@ scripts/gen-test.sh TC-SWORD-001 --force  # 再生成
 node ../agentic-test-hub/packages/cli/bin/generate-test.ts <ID> \
   --specs specs --plugin plugin.yaml --plugin-root . \
   --lang python --python-extensions-module weko_suite_ext \
-  --out tests/generated/<モジュール名>.py
+  --out tests/generated/test_<モジュール名>.py
 ```
 
 - 生成物は手で編集しない（再生成で消える）。直したいときは仕様か `plugin.yaml` を直す。
@@ -61,7 +61,7 @@ node ../agentic-test-hub/packages/cli/bin/generate-test.ts <ID> \
 ```sh
 cp .env.example .env     # 値を埋める。.env はコミットしない
 set -a; . ./.env; set +a
-ATH_EVIDENCE_DIR=artifacts/evidence uv run pytest tests/generated/tc_sword_001.py
+ATH_EVIDENCE_DIR=artifacts/evidence uv run pytest tests/generated/test_tc_sword_001.py   # または tests/generated 全体
 ```
 
 `ATH_EVIDENCE_DIR` を指定すると証跡（HTTP 往復、アプリログ、DB レコードの前後、差分）が保存される。

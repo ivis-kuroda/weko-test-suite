@@ -30,6 +30,9 @@ uv run ruff check .
 step "pytest (tools, seeds, plugin and extension)"
 uv run pytest -q
 
+step "generated tests are collected (docs/stub.md F-4)"
+scripts/check-generated.sh
+
 step "fixtures manifest"
 uv run python seeds/build_fixtures.py build --check
 
