@@ -354,3 +354,10 @@ def test_helper_call_speaks_the_helper_contract() -> None:
     finally:
         weko_suite_ext.set_runner(previous)
     assert seen[1][1] == {"title": "t"}
+
+
+def test_c_w_has_a_second_token_without_the_activity_scope():
+    specs = {s.token_env: s for s in bs.token_specs(None)}  # cfg is not read
+    assert specs["SW_TOKEN_W2"].sword == "Workflow"
+    assert specs["SW_TOKEN_W2"].scopes == bs.SCOPES_NO_ACTIVITY
+    assert specs["SW_TOKEN_W"].scopes == bs.SCOPES_FULL

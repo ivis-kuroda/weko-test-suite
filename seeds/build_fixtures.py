@@ -429,6 +429,12 @@ def catalogue() -> list[Fixture]:
             lambda: _simplezip_csv("Distinct title A"),
         ),
         Fixture(
+            "simplezip-no-title.zip",
+            PKG_SIMPLEZIP,
+            "SimpleZip whose CSV item has an empty title (metadata deficiency, S5-07).",
+            lambda: _simplezip_csv(""),
+        ),
+        Fixture(
             "simplezip-title-b.zip",
             PKG_SIMPLEZIP,
             "Normal SimpleZip, title B.",

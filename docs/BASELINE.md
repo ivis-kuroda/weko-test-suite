@@ -72,6 +72,7 @@ System Administrator を付与）。
 | `SW_TOKEN_5` | ⑤: スコープなしで発行 |
 | `SW_TOKEN_REV` | T-REV: 失効用（S1-02 で失効させる。他では使わない） |
 | `SW_TOKEN_W` / `SW_TOKEN_OBO` / `SW_TOKEN_X` | ① 相当のスコープで C-W / C-OBO / C-X 用 |
+| `SW_TOKEN_W2` | ② 相当（アクティビティ用スコープなし）で C-W 用（`sw-cw-2`、同じ Workflow）。S3-03・S3-05 用 |
 | `SW_TOKEN_ROLE_*` | ロール別の① （S2-01）。所有者がそのロールのユーザー |
 | `SW_CLIENT_ID_1` / `_2` / `_3` / `_X` | C-D / C-W / C-OBO / C-X の OAuth2 クライアント ID |
 | `SW_R1`〜`SW_R9` | 状態データの recid |

@@ -182,3 +182,12 @@ def test_cli_writes_files(tmp_path):
     out = tmp_path / "gen"
     assert bf.main(["build", "--out", str(out), "--manifest", str(tmp_path / "m.json")]) == 0
     assert (out / "bagit-normal.zip").read_bytes() == BY_NAME["bagit-normal.zip"].build()
+
+
+def test_no_title_fixture_has_an_empty_title_cell():
+    row = read(BY_NAME["simplezip-no-title.zip"].build(), "data/index.csv").decode().splitlines()[5]
+    cells = row.split("\t") if "\t" in row else row.split(",")
+    assert "" in cells
+    normal_zip = BY_NAME["simplezip-normal.zip"].build()
+    normal = read(normal_zip, "data/index.csv").decode().splitlines()[5]
+    assert row != normal

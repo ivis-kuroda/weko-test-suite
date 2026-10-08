@@ -138,6 +138,14 @@
       "digest": "SHA-256=d5e6f5e1d7950137b69aa22b2fcf623c8ed119023e06d9b6a27930c527a697d2"
     },
     {
+      "name": "simplezip-no-title.zip",
+      "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
+      "purpose": "SimpleZip whose CSV item has an empty title (metadata deficiency, S5-07).",
+      "bytes": 532,
+      "sha256": "b2b9efc19e6a2b5e6e377c10188d5ba1d6df9b58c052dd09dd6e5b82249d89f5",
+      "digest": "SHA-256=b2b9efc19e6a2b5e6e377c10188d5ba1d6df9b58c052dd09dd6e5b82249d89f5"
+    },
+    {
       "name": "simplezip-title-b.zip",
       "packaging": "http://purl.org/net/sword/3.0/package/SimpleZip",
       "purpose": "Normal SimpleZip, title B.",

@@ -358,6 +358,14 @@ def token_specs(cfg: Config) -> list[TokenSpec]:
             note="C-W with a deletion flow",
         ),
         TokenSpec(
+            "sw-cw-2",
+            "SW_TOKEN_W2",
+            "SYSADMIN",
+            SCOPES_NO_ACTIVITY,
+            "Workflow",
+            note="(2) for C-W: no activity scope (S3-03, S3-05)",
+        ),
+        TokenSpec(
             "sw-cobo",
             "SW_TOKEN_OBO",
             "SYSADMIN",
@@ -614,6 +622,7 @@ GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "SW_TOKEN_REVOKED",
             "SW_TOKEN_REV",
             "SW_TOKEN_W",
+            "SW_TOKEN_W2",
             "SW_TOKEN_OBO",
             "SW_TOKEN_X",
         )
