@@ -39,6 +39,33 @@ tests/                 生成された Playwright コード
   別リポジトリでも追跡性は失われない。スキーマ側の `appliesTo.commit` が
   その慣行をそのまま構造化している
 
+## ツール
+
+`tools/` に仕様の取り込みと静的検査の小さなスクリプトがある（Python 3.11 標準ライブラリ
+＋ openpyxl。`uv` で実行）。
+
+```sh
+cd tools
+uv sync
+
+# 観点表（xlsx）とケース仕様書（md）から観点 YAML・コード対応表・トレース表を生成する。
+# 出力は入力のみで決まり、再実行しても同一バイト列になる。
+uv run python import_viewpoints.py --xlsx <観点表.xlsx> --spec-md <仕様書.md> --out-root ..
+
+# weko の errors.py をコード対応表と静的に突き合わせる（weko は import しない）。
+uv run python check_error_codes.py \
+  --errors <weko>/modules/weko-swordserver/weko_swordserver/errors.py \
+  --map ../fixtures/error-code-map.json \
+  --catalog <weko>/modules/weko-swordserver/weko_swordserver/translations/en/LC_MESSAGES/messages.po
+
+uv run ruff check . && uv run pytest
+```
+
+`check_error_codes.py` の終了コードは、差異なしが 0、差異ありが 1、引数・解析エラーが 2。
+
+生成物（`specs/viewpoints/`・`fixtures/error-code-map.json`・`docs/spec-trace.md`）は
+機械生成の提案であり、`spec-draft/*` ブランチでレビューしてから取り込む。
+
 ## 開発の規約
 
 AI エージェント向けの規範は [AGENTS.md](./AGENTS.md) に、コミット規約は
