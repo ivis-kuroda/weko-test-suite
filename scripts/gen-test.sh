@@ -2,6 +2,11 @@
 # Generates the Python test for one case or scenario.
 #
 #   scripts/gen-test.sh TC-SWORD-001 [--force]
+#   SPECS_DIR=../weko-test-suite-spec/specs scripts/gen-test.sh TC-SW-S5-01
+#
+# SPECS_DIR (default: specs) lets the generation read the specifications from
+# another checkout, e.g. the spec-draft worktree, whose files then receive the
+# automation write-back while the test code lands here.
 #
 # Output goes to tests/generated/test_<module>.py, where <module> is the id as a
 # Python identifier (TC-SWORD-001 -> test_tc_sword_001.py). The test_ prefix is what
@@ -29,7 +34,7 @@ module="$(printf '%s' "$id" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/_/g'
 
 cd "$REPO_ROOT"
 exec node "$HUB_DIR/packages/cli/bin/generate-test.ts" "$id" \
-  --specs specs \
+  --specs "${SPECS_DIR:-specs}" \
   --plugin plugin.yaml \
   --plugin-root . \
   --lang python \
