@@ -61,9 +61,9 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_2401
-    - "Registration of item is pending completion\\. Please open the following URL to continue with the remaining operations:"
-    - Registration of item is pending completion
+    - WARNING.*WEKO_SWORDSERVER_E_2401
+    - "WARNING.*Registration of item is pending completion\\. Please open the following URL to continue with the remaining operations:"
+    - WARNING.*Registration of item is pending completion
 evidenceWaivers: []
 priority: P2
 tags:

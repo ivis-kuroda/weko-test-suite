@@ -154,14 +154,14 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_1303
-    - Cannot get filename by Content-Disposition\.
-    - WEKO_SWORDSERVER_E_2101
-    - Item not found\. \(recid=
-    - WEKO_SWORDSERVER_E_1306
-    - Failed to verify request body and digest\.
-    - WEKO_SWORDSERVER_E_1402
-    - "Not accept packaging:"
+    - WARNING.*WEKO_SWORDSERVER_E_1303
+    - WARNING.*Cannot get filename by Content-Disposition\.
+    - WARNING.*WEKO_SWORDSERVER_E_2101
+    - WARNING.*Item not found\. \(recid=
+    - WARNING.*WEKO_SWORDSERVER_E_1306
+    - WARNING.*Failed to verify request body and digest\.
+    - WARNING.*WEKO_SWORDSERVER_E_1402
+    - "WARNING.*Not accept packaging:"
 evidenceWaivers: []
 tags:
   - spec:S6-03

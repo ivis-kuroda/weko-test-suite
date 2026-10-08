@@ -29,8 +29,8 @@ evidence:
     - Authentication is required
     - Forbidden
     - Not allowed operation in your
-    - WEKO_SWORDSERVER_E_2101
-    - Item not found\. \(recid=
+    - WARNING.*WEKO_SWORDSERVER_E_2101
+    - WARNING.*Item not found\. \(recid=
 evidenceWaivers: []
 at:
   F-SW-EP: L-SW-EP5

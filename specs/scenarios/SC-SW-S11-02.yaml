@@ -116,10 +116,10 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_1303
-    - Cannot get filename by Content-Disposition\.
-    - WEKO_SWORDSERVER_E_2101
-    - Item not found\. \(recid=
+    - WARNING.*WEKO_SWORDSERVER_E_1303
+    - WARNING.*Cannot get filename by Content-Disposition\.
+    - WARNING.*WEKO_SWORDSERVER_E_2101
+    - WARNING.*Item not found\. \(recid=
 evidenceWaivers: []
 tags:
   - spec:S11-02

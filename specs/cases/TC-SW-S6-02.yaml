@@ -53,8 +53,8 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_2106
-    - Cannot delete item with DOI\.
+    - WARNING.*WEKO_SWORDSERVER_E_2106
+    - WARNING.*Cannot delete item with DOI\.
 evidenceWaivers: []
 priority: P2
 tags:

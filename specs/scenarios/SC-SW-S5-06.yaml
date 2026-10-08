@@ -203,12 +203,11 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_1501
-    - "Item check error:"
-    - WEKO_SWORDSERVER_E_3201
-    - Internal Server Error
-    - BagValidationError
-    - BagError
+    - WARNING.*WEKO_SWORDSERVER_E_1501
+    - "WARNING.*Item check error:"
+    - ERROR.*WEKO_SWORDSERVER_E_3201
+    - ERROR.*Internal Server Error
+    - Traceback
 evidenceWaivers: []
 tags:
   - spec:S5-06

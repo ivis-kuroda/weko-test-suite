@@ -40,8 +40,8 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - WEKO_SWORDSERVER_E_1401
-    - "Not accept Content-Type:"
+    - WARNING.*WEKO_SWORDSERVER_E_1401
+    - "WARNING.*Not accept Content-Type:"
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-CONTENT-TYPE
