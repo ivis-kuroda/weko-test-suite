@@ -1,0 +1,42 @@
+{
+  "tokens": {
+    "STUBTOKEN-direct-admin": {
+      "name": "direct-admin", "client": "client-direct", "role": "System Administrator",
+      "scopes": ["deposit:write", "deposit:actions", "item:create", "item:update", "item:delete", "user:activity"]
+    },
+    "STUBTOKEN-no-scope": {
+      "name": "no-scope", "client": "client-direct", "role": "System Administrator", "scopes": []
+    },
+    "STUBTOKEN-contributor": {
+      "name": "contributor", "client": "client-direct", "role": "Contributor",
+      "scopes": ["deposit:write", "deposit:actions", "item:create", "item:update", "item:delete"]
+    },
+    "STUBTOKEN-workflow-no-activity": {
+      "name": "workflow-no-activity", "client": "client-workflow", "role": "System Administrator",
+      "scopes": ["deposit:write", "deposit:actions", "item:create", "item:update", "item:delete"]
+    },
+    "STUBTOKEN-no-client": {
+      "name": "no-client", "client": "client-unregistered", "role": "System Administrator",
+      "scopes": ["deposit:write", "deposit:actions", "item:create", "item:update", "item:delete"]
+    },
+    "STUBTOKEN-revoked": {
+      "name": "revoked", "client": "client-direct", "role": "System Administrator",
+      "scopes": ["deposit:write", "deposit:actions", "item:create"]
+    }
+  },
+  "revoked": ["STUBTOKEN-revoked"],
+  "clients": {
+    "client-direct": {"name": "direct client", "register_type": "Direct", "duplicate_check": false},
+    "client-workflow": {"name": "workflow client", "register_type": "Workflow"}
+  },
+  "records": {
+    "1": {"title": "Existing item 1"},
+    "2": {"title": "Item with DOI", "doi": true},
+    "3": {"title": "Locked item", "locked": true},
+    "4": {"title": "Item being edited", "editing": true},
+    "5": {"title": "Item in import", "importing": true},
+    "6": {"title": "Deletable item"}
+  },
+  "next_recid": 100,
+  "settings": {"max_upload_size": 1048576}
+}
