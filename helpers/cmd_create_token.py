@@ -15,6 +15,8 @@ import contract
 
 SCOPE_RE = re.compile(r"^[A-Za-z0-9:_.\-]+$")
 CLIENT_NAME_MAX = 40  # oauth2server_client.name is String(40)
+DEFAULT_TOKEN_PREFIX = "WEKO_TEST_TOKEN_"  # matches the redact pattern in plugin.yaml
+PREFIX_RE = re.compile(r"^[A-Za-z0-9_]{0,32}$")
 
 
 def parse(params):
@@ -29,13 +31,24 @@ def parse(params):
     for scope in scopes:
         if not SCOPE_RE.match(scope):
             raise contract.HelperError("InvalidArgument", "malformed scope: %r" % scope)
+    prefix = params.get("token_prefix", DEFAULT_TOKEN_PREFIX)
+    if not isinstance(prefix, str) or not PREFIX_RE.match(prefix):
+        raise contract.HelperError(
+            "InvalidArgument", "token_prefix must match %s" % PREFIX_RE.pattern
+        )
     return {
         "user_email": contract.require_email(params, "user_email"),
         "name": name,
         "client_name": client_name,
         "scopes": scopes,
+        "token_prefix": prefix,
         "allow_unknown_scopes": contract.optional_bool(params, "allow_unknown_scopes", False),
     }
+
+
+def mint_token_value(prefix, random_part):
+    """Token string: redactable prefix plus a random tail (pure)."""
+    return prefix + random_part
 
 
 def parse_revoke(params):
@@ -95,8 +108,35 @@ def run(params):
     reused = token is not None
     previous_scopes = None
     wanted = scope_string(args["scopes"])
-    if token is None:
+    if token is None and not args["token_prefix"]:
         token = Token.create_personal(args["client_name"], user.id, scopes=args["scopes"])
+    elif token is None:
+        # Same rows as Token.create_personal, but with a prefixed access token so that
+        # evidence redaction (plugin.yaml redact.patterns) can recognise it.
+        from flask import current_app
+        from werkzeug.security import gen_salt
+
+        with db.session.begin_nested():
+            client = Client(
+                name=args["client_name"],
+                user_id=user.id,
+                is_internal=True,
+                is_confidential=False,
+                _default_scopes=wanted,
+            )
+            client.gen_salt()
+            tail = gen_salt(current_app.config.get("OAUTH2SERVER_TOKEN_PERSONAL_SALT_LEN", 60))
+            token = Token(
+                client_id=client.client_id,
+                user_id=user.id,
+                access_token=mint_token_value(args["token_prefix"], tail),
+                expires=None,
+                _scopes=wanted,
+                is_personal=True,
+                is_internal=False,
+            )
+            db.session.add(client)
+            db.session.add(token)
     elif (token._scopes or "") != wanted:
         previous_scopes = (token._scopes or "").split()
         token._scopes = wanted

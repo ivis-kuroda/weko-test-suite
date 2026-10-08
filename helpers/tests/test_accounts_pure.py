@@ -63,3 +63,14 @@ def test_register_parse():
         sw.parse({"client_id": "a", "client_name": "b"})
     args = sw.parse({"client_name": "c", "registration_type": 5, "delete_flow_id": None})
     assert args["registration_type_id"] == 5 and args["has_delete_flow_id"] is True
+
+
+def test_token_prefix_default_matches_redaction_pattern():
+    import re
+
+    args = tok.parse({"user_email": "a@b.c", "name": "n"})
+    value = tok.mint_token_value(args["token_prefix"], "AbC123")
+    assert re.search(r"WEKO_TEST_TOKEN_[A-Za-z0-9_-]+", value)
+    assert tok.parse({"user_email": "a@b.c", "name": "n", "token_prefix": ""})["token_prefix"] == ""
+    with pytest.raises(contract.HelperError):
+        tok.parse({"user_email": "a@b.c", "name": "n", "token_prefix": "bad prefix"})
