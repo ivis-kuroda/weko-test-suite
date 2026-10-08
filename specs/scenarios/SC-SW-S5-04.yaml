@@ -99,7 +99,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1306
-    - Failed\ to\ verify\ request\ body\ and\ digest\.
+    - Failed to verify request body and digest\.
 evidenceWaivers: []
 tags:
   - spec:S5-04

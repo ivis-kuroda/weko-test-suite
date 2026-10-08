@@ -204,12 +204,11 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1501
-    - "Item\\ check\\ error:"
+    - "Item check error:"
     - WEKO_SWORDSERVER_E_3201
-    - Internal\ Server\ Error
+    - Internal Server Error
     - BagValidationError
     - BagError
-    - Internal Server Error
 evidenceWaivers: []
 tags:
   - spec:S5-06

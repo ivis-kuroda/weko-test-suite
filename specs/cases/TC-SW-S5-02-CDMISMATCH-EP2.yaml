@@ -44,7 +44,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1304
-    - Not\ found
+    - Not found
 evidenceWaivers: []
 at:
   F-SW-FILE-DEFECT: L-SW-DEFECT-CDMISMATCH

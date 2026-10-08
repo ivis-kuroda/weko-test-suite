@@ -60,13 +60,13 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1404
-    - SWORDBagIt\ requires\ metadate/sword\.json\.
+    - SWORDBagIt requires metadate/sword\.json\.
     - WEKO_SWORDSERVER_E_1405
-    - packaging\ format\ is\ SimpleZip,\ but\ sword\.json\ is\ found\.
+    - packaging format is SimpleZip, but sword\.json is found\.
     - WEKO_SWORDSERVER_E_1406
-    - ro\-crate\-metadata\.json\ is\ required\ in\ data/\ directory\.
+    - ro-crate-metadata\.json is required in data/ directory\.
     - WEKO_SWORDSERVER_E_1407
-    - SimpleZip\ requires\ ro\-crate\-metadata\.json\ or\ other\ metadata\ file\.
+    - SimpleZip requires ro-crate-metadata\.json or other metadata file\.
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-BAGIT-NOMETA

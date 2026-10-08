@@ -51,7 +51,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1303
-    - Cannot\ get\ filename\ by\ Content\-Disposition\.
+    - Cannot get filename by Content-Disposition\.
 evidenceWaivers: []
 priority: P1
 tags:

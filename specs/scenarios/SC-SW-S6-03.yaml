@@ -155,13 +155,13 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1303
-    - Cannot\ get\ filename\ by\ Content\-Disposition\.
+    - Cannot get filename by Content-Disposition\.
     - WEKO_SWORDSERVER_E_2101
-    - Item\ not\ found\.\ \(recid=
+    - Item not found\. \(recid=
     - WEKO_SWORDSERVER_E_1306
-    - Failed\ to\ verify\ request\ body\ and\ digest\.
+    - Failed to verify request body and digest\.
     - WEKO_SWORDSERVER_E_1402
-    - "Not\\ accept\\ packaging:"
+    - "Not accept packaging:"
 evidenceWaivers: []
 tags:
   - spec:S6-03

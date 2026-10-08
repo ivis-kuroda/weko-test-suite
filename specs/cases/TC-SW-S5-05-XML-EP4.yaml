@@ -53,7 +53,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1410
-    - Direct\ registration\ is\ not\ allowed\ for\ XML\ metadata\ yet\.
+    - Direct registration is not allowed for XML metadata yet\.
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-XML

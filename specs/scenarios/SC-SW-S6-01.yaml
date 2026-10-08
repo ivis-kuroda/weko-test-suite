@@ -252,7 +252,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_2101
-    - Item\ not\ found\.\ \(recid=
+    - Item not found\. \(recid=
 evidenceWaivers: []
 tags:
   - spec:S6-01

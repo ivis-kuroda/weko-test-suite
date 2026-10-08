@@ -48,7 +48,7 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1301
-    - No\ file\ part\.
+    - No file part\.
 evidenceWaivers: []
 at:
   F-SW-FILE-DEFECT: L-SW-DEFECT-NOFILE

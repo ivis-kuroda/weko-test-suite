@@ -165,11 +165,11 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1504
-    - Multiple\ items\ found\ in\ import\ file\.\ Only\ one\ item\ is\ allowed\ for\ PUT\ requests\.
+    - Multiple items found in import file\. Only one item is allowed for PUT requests\.
     - WEKO_SWORDSERVER_E_1505
-    - "This\\ item\\ is\\ not\\ registered\\ yet:"
+    - "This item is not registered yet:"
     - WEKO_SWORDSERVER_E_1506
-    - "Item\\ id\\ does\\ not\\ match\\.\\ item:"
+    - "Item id does not match\\. item:"
 evidenceWaivers: []
 tags:
   - spec:S5-08

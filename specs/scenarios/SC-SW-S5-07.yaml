@@ -163,9 +163,9 @@ evidence:
   trace: on_failure
   ignore:
     - WEKO_SWORDSERVER_E_1501
-    - "Item\\ check\\ error:"
+    - "Item check error:"
     - WEKO_SWORDSERVER_E_1502
-    - "This\\ item\\ is\\ already\\ registered:"
+    - "This item is already registered:"
 evidenceWaivers: []
 tags:
   - spec:S5-07
