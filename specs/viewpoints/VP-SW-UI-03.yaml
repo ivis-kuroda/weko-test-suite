@@ -1,0 +1,8 @@
+id: VP-SW-UI-03
+title: 登録形式（メタデータ形式）を無効にしたとき
+rationale: 前提：管理画面で特定の登録形式を無効にする。操作：その形式のファイルで EP2 を呼ぶ。期待結果：HTTP 415、コード帯 `WEKO_SWORDSERVER_E_14xx`。形式が有効でない旨の文言。有効化後に成功する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1
+risk: medium
+parents: []

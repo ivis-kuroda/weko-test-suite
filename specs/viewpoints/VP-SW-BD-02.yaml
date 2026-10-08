@@ -1,0 +1,8 @@
+id: VP-SW-BD-02
+title: 応答形式が維持され、新規フィールドが増えない
+rationale: 前提：BD-01 と同じ。操作：BD-01 の応答 JSON のキーを確認する。期待結果：`@context`、`@type`、`timestamp`、`error` のみ。コード専用の別フィールドがない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.2, §7
+risk: medium
+parents: []

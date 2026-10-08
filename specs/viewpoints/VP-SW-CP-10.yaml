@@ -1,0 +1,8 @@
+id: VP-SW-CP-10
+title: API リファレンスと実際の応答が一致する
+rationale: 前提：更新済みの `weko-document` のリファレンス。操作：代表エラーの応答をリファレンスと突き合わせる。期待結果：コード、ステータス、`@type`、メッセージが一致する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §2, §4.4
+risk: medium
+parents: []

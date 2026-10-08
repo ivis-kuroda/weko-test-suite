@@ -1,0 +1,8 @@
+id: VP-SW-BD-75
+title: EP2・EP4：メタデータ検証・重複
+rationale: 前提：メタデータ不備のファイル、登録済みと同一のアイテム（EP2 のみ）、類似アイテム。重複検知を有効にした設定。操作：EP2・EP4 で送る。期待結果：メタデータ不備・重複はいずれも HTTP 400、コード帯 `WEKO_SWORDSERVER_E_15xx`。重複は既存アイテムを特定できる情報を含む。EP4 も EP2 と同じステータス・コード帯（「登録済みと同一のアイテム」を除く）。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+risk: medium
+parents: []

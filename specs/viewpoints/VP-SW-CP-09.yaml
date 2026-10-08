@@ -1,0 +1,8 @@
+id: VP-SW-CP-09
+title: 応答時間に大きな劣化がない
+rationale: 前提：正常系・エラー系の代表。操作：改修前後で応答時間を計測する。期待結果：現行運用基準内。大きな劣化がない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §5.1
+risk: medium
+parents: []

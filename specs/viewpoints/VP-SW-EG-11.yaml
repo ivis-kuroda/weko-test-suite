@@ -1,0 +1,8 @@
+id: VP-SW-EG-11
+title: 詳細由来：Workflow 登録で複数アイテムが部分完了
+rationale: 前提：複数アイテムを含む登録ファイル。操作：EP2 を呼ぶ。期待結果：`error` にアクティビティごとの案内が `"; "` で連結される。各案内に継続 URL がある。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.3
+risk: medium
+parents: []

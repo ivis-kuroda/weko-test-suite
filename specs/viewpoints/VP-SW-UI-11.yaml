@@ -1,0 +1,8 @@
+id: VP-SW-UI-11
+title: トークンを失効させるとコードなしの認証エラーになる
+rationale: 前提：トークン発行済み。操作：画面でトークンを削除または失効させ、EP1 を呼ぶ。期待結果：401。独自コードなし（AU-01 と同じ扱い）。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.2
+risk: medium
+parents: []

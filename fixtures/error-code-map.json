@@ -1,0 +1,824 @@
+[
+  {
+    "code": "1201",
+    "msgid": "ACTIVITY_SCOPE_INSUFFICIENT",
+    "status": 403,
+    "viewpoints": [
+      "VP-SW-AU-10",
+      "VP-SW-AU-30",
+      "VP-SW-AU-34",
+      "VP-SW-BD-03"
+    ],
+    "cases": [
+      "S2-01",
+      "S3-01",
+      "S3-02",
+      "S3-03",
+      "S3-06",
+      "S15-13"
+    ],
+    "summary": "`Not allowed operation in your token scope.` 403。EP2/EP4/EP5 の Workflow 経路でスコープ不足",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1202",
+    "msgid": "ON_BEHALF_OF_NOT_ALLOWED",
+    "status": 412,
+    "viewpoints": [
+      "VP-SW-AU-20"
+    ],
+    "cases": [
+      "S4-01"
+    ],
+    "summary": "`Not support On-Behalf-Of.` 412。EP1〜EP5 共通（decorator）",
+    "verification": "実環境（サーバー設定変更・再起動が必要）",
+    "match": "明示",
+    "reachability_note": "実環境（サーバー設定変更・再起動が必要）"
+  },
+  {
+    "code": "1203",
+    "msgid": "ON_BEHALF_OF_USER_NOT_FOUND",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-AU-21"
+    ],
+    "cases": [
+      "S4-02"
+    ],
+    "summary": "`No user found by On-Behalf-Of.` 400。EP2（OBO 対象取得）",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1204",
+    "msgid": "ON_BEHALF_OF_USER_ROLE_FORBIDDEN",
+    "status": 403,
+    "viewpoints": [
+      "VP-SW-AU-21"
+    ],
+    "cases": [
+      "S4-02"
+    ],
+    "summary": "`On-Behalf-Of user is not allowed by role.` 403。EP2",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1301",
+    "msgid": "FILE_PART_MISSING",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-01",
+      "VP-SW-BD-71"
+    ],
+    "cases": [
+      "S5-01",
+      "S5-02"
+    ],
+    "summary": "`No file part.` 400。EP2/EP4（decorator）",
+    "verification": "実環境",
+    "match": "明示（S5-02 (a)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1302",
+    "msgid": "FILE_NOT_SELECTED",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-71"
+    ],
+    "cases": [
+      "S5-02"
+    ],
+    "summary": "`No selected file.` 400",
+    "verification": "実環境",
+    "match": "明示（S5-02 (b)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1303",
+    "msgid": "FILENAME_UNRESOLVABLE",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-01",
+      "VP-SW-BD-71"
+    ],
+    "cases": [
+      "S5-01",
+      "S5-02"
+    ],
+    "summary": "`Cannot get filename by Content-Disposition.` 400。EP2/EP4",
+    "verification": "実環境",
+    "match": "明示（S5-02 (c)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1304",
+    "msgid": "FILE_NOT_FOUND_IN_BODY",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-71"
+    ],
+    "cases": [
+      "S5-02"
+    ],
+    "summary": "`Not found {filename} in request body.` 400",
+    "verification": "実環境",
+    "match": "明示（S5-02 (d)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1305",
+    "msgid": "UPLOAD_SIZE_EXCEEDED",
+    "status": 413,
+    "viewpoints": [
+      "VP-SW-BD-72"
+    ],
+    "cases": [
+      "S5-03"
+    ],
+    "summary": "`Content size is too large...` 413",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1306",
+    "msgid": "DIGEST_MISMATCH",
+    "status": 412,
+    "viewpoints": [
+      "VP-SW-BD-73"
+    ],
+    "cases": [
+      "S5-04"
+    ],
+    "summary": "`Failed to verify request body and digest.` 412",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1401",
+    "msgid": "CONTENT_TYPE_NOT_ACCEPTABLE",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "`Not accept Content-Type` 415",
+    "verification": "実環境（到達不能の可能性。個別検証の対象外）",
+    "match": "帯のみ（14xx）。**到達不能の可能性**",
+    "reachability_note": "実環境（到達不能の可能性。個別検証の対象外） / 帯のみ（14xx）。到達不能の可能性"
+  },
+  {
+    "code": "1402",
+    "msgid": "PACKAGING_NOT_ACCEPTABLE",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "`Not accept packaging` 415（decorator）",
+    "verification": "実環境（既定設定。条件付き）",
+    "match": "明示（条件付き）",
+    "reachability_note": "実環境（既定設定。条件付き） / 明示（条件付き）"
+  },
+  {
+    "code": "1403",
+    "msgid": "PACKAGING_REQUIRED",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "`Packaging is required.` 415",
+    "verification": "設定依存（個別検証の対象外）",
+    "match": "帯のみ（14xx）。**設定依存**",
+    "reachability_note": "設定依存（個別検証の対象外） / 帯のみ（14xx）。設定依存"
+  },
+  {
+    "code": "1404",
+    "msgid": "SWORDBAGIT_METADATA_MISSING",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "SWORDBagIt のメタデータ欠落 415",
+    "verification": "実環境",
+    "match": "明示（1404〜1407 の範囲）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1405",
+    "msgid": "SIMPLEZIP_UNEXPECTED_SWORD_JSON",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "SimpleZip に sword.json あり 415",
+    "verification": "実環境",
+    "match": "明示（範囲）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1406",
+    "msgid": "ROCRATE_METADATA_MISSING",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "ro-crate-metadata.json なし 415",
+    "verification": "実環境",
+    "match": "明示（範囲）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1407",
+    "msgid": "SIMPLEZIP_METADATA_FILE_MISSING",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "SimpleZip のメタデータファイルなし 400",
+    "verification": "実環境",
+    "match": "明示（範囲）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1408",
+    "msgid": "PACKAGING_FORMAT_NOT_ACCEPTABLE",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "`Not accept packaging format` 415（`check_import_file_format`）",
+    "verification": "設定依存（個別検証の対象外）",
+    "match": "帯のみ（14xx）。**設定依存**",
+    "reachability_note": "設定依存（個別検証の対象外） / 帯のみ（14xx）。設定依存"
+  },
+  {
+    "code": "1409",
+    "msgid": "METADATA_IMPORT_DISABLED",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-UI-03"
+    ],
+    "cases": [
+      "S9-03"
+    ],
+    "summary": "`{file_format} metadata import is not enabled.` 415",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1410",
+    "msgid": "XML_DIRECT_REGISTRATION_NOT_ALLOWED",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-BD-74"
+    ],
+    "cases": [
+      "S5-05"
+    ],
+    "summary": "XML の Direct 登録不可 415",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1411",
+    "msgid": "UNSUPPORTED_FILE_FORMAT",
+    "status": 415,
+    "viewpoints": [
+      "VP-SW-EG-18"
+    ],
+    "cases": [
+      "S15-15"
+    ],
+    "summary": "`Unsupported file format: {file_format}` 415（`check_import_items` の else）",
+    "verification": "モック（M14）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1501",
+    "msgid": "ITEM_CHECK_ERROR",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-42",
+      "VP-SW-BD-75",
+      "VP-SW-UI-25"
+    ],
+    "cases": [
+      "S5-06",
+      "S5-07"
+    ],
+    "summary": "`Item check error: {detail}` 400。EP2/EP4 の項目検証、`check_jsonld_import_items` の bagit／文字コード／JSON 構文",
+    "verification": "実環境",
+    "match": "明示（S5-06、S5-07）",
+    "reachability_note": ""
+  },
+  {
+    "code": "1502",
+    "msgid": "ITEM_ALREADY_REGISTERED",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-75"
+    ],
+    "cases": [
+      "S5-07"
+    ],
+    "summary": "`This item is already registered` 400。EP2",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1503",
+    "msgid": "ITEM_DUPLICATE_SUSPECTED",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-75"
+    ],
+    "cases": [
+      "S5-07"
+    ],
+    "summary": "`Some similar items are already registered` 400。EP2/EP4",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1504",
+    "msgid": "MULTIPLE_ITEMS_IN_PUT",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-EG-12"
+    ],
+    "cases": [
+      "S5-08"
+    ],
+    "summary": "PUT で複数アイテム 400",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1505",
+    "msgid": "ITEM_NOT_REGISTERED_FOR_PUT",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-EG-12"
+    ],
+    "cases": [
+      "S5-08"
+    ],
+    "summary": "未登録アイテムへの PUT 400",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "1506",
+    "msgid": "ITEM_ID_MISMATCH",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-EG-12"
+    ],
+    "cases": [
+      "S5-08"
+    ],
+    "summary": "アイテム ID 不一致 400",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2101",
+    "msgid": "ITEM_NOT_FOUND",
+    "status": 404,
+    "viewpoints": [
+      "VP-SW-BD-04",
+      "VP-SW-BD-05"
+    ],
+    "cases": [
+      "S6-01",
+      "S6-03"
+    ],
+    "summary": "`Item not found. (recid=...)` 404。EP3/EP4/EP5（`_get_status_document`）",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2102",
+    "msgid": "RECORD_NOT_FOUND",
+    "status": 404,
+    "viewpoints": [
+      "VP-SW-EG-19"
+    ],
+    "cases": [
+      "S15-16"
+    ],
+    "summary": "`Record not found.` 404。EP5 `delete_item_directly`",
+    "verification": "モック（M15）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2103",
+    "msgid": "SWORD_CLIENT_NOT_CONFIGURED",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-UI-02"
+    ],
+    "cases": [
+      "S9-02"
+    ],
+    "summary": "`No SWORD API setting found...` 400。EP2（JSON 経路）、EP5",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2104",
+    "msgid": "WORKFLOW_NOT_FOUND",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-UI-04"
+    ],
+    "cases": [
+      "S9-04"
+    ],
+    "summary": "`Workflow not found for registration your item.` 400",
+    "verification": "実環境",
+    "match": "明示（S9-04 (a)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "2105",
+    "msgid": "WORKFLOW_NOT_FOR_REGISTRATION",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-UI-04"
+    ],
+    "cases": [
+      "S9-04"
+    ],
+    "summary": "`Workflow is not for item registration.` 400",
+    "verification": "実環境",
+    "match": "明示（S9-04 (b)）",
+    "reachability_note": ""
+  },
+  {
+    "code": "2106",
+    "msgid": "ITEM_HAS_DOI",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-EG-06"
+    ],
+    "cases": [
+      "S6-02"
+    ],
+    "summary": "`Cannot delete item with DOI.` 400。EP5",
+    "verification": "実環境（DOI は DB 直接登録で代替の場合あり）",
+    "match": "明示",
+    "reachability_note": "実環境（DOI は DB 直接登録で代替の場合あり）"
+  },
+  {
+    "code": "2201",
+    "msgid": "ITEM_LOCKED",
+    "status": 409,
+    "viewpoints": [
+      "VP-SW-BD-10",
+      "VP-SW-UI-23"
+    ],
+    "cases": [
+      "S7-01",
+      "S7-04"
+    ],
+    "summary": "`Item {recid} will be edited by another process.` 409。EP4/EP5 のロック",
+    "verification": "実環境（Redis キー手動設定の代替あり）",
+    "match": "明示",
+    "reachability_note": "実環境（Redis キー手動設定の代替あり）"
+  },
+  {
+    "code": "2202",
+    "msgid": "ITEM_IMPORT_IN_PROGRESS",
+    "status": 409,
+    "viewpoints": [
+      "VP-SW-UI-22"
+    ],
+    "cases": [
+      "S7-03"
+    ],
+    "summary": "一括インポート中 409。EP5",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2203",
+    "msgid": "ITEM_BEING_EDITED",
+    "status": 409,
+    "viewpoints": [
+      "VP-SW-UI-23"
+    ],
+    "cases": [
+      "S7-04"
+    ],
+    "summary": "編集中 409。EP5",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2301",
+    "msgid": "RATE_LIMIT_EXCEEDED",
+    "status": 429,
+    "viewpoints": [
+      "VP-SW-BD-70"
+    ],
+    "cases": [
+      "S10-01"
+    ],
+    "summary": "`Too many requests.` 429。EP1（および `limiter` 付き EP）",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2401",
+    "msgid": "REGISTRATION_PENDING_COMPLETION",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-30",
+      "VP-SW-UI-01",
+      "VP-SW-UI-20",
+      "VP-SW-UI-21"
+    ],
+    "cases": [
+      "S8-01",
+      "S8-02",
+      "S8-04",
+      "S8-05",
+      "S9-01"
+    ],
+    "summary": "Workflow 登録の部分完了 400",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "2402",
+    "msgid": "UPDATE_PENDING_COMPLETION",
+    "status": 400,
+    "viewpoints": [
+      "VP-SW-BD-31"
+    ],
+    "cases": [
+      "S8-03"
+    ],
+    "summary": "Workflow 更新の部分完了 400",
+    "verification": "実環境",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3101",
+    "msgid": "DB_ACCESS_FAILURE",
+    "status": 503,
+    "viewpoints": [
+      "VP-SW-AU-21",
+      "VP-SW-BD-13"
+    ],
+    "cases": [
+      "S14-01",
+      "S15-02"
+    ],
+    "summary": "`Failed to get shared ID from On-Behalf-Of.` 503。OBO 対象取得の DB 接続障害",
+    "verification": "モック（M8）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3102",
+    "msgid": "INVALID_REGISTRATION_TYPE",
+    "status": 500,
+    "viewpoints": [
+      "VP-SW-UI-05"
+    ],
+    "cases": [
+      "S15-11"
+    ],
+    "summary": "`Invalid registration type: {register_type}` 500。EP5 の `check_deletion_type`",
+    "verification": "モック（M12）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3103",
+    "msgid": "INVALID_REGISTER_FORMAT",
+    "status": 500,
+    "viewpoints": [
+      "VP-SW-UI-05"
+    ],
+    "cases": [
+      "S15-11"
+    ],
+    "summary": "`Invalid register format has been set for admin setting` 500。EP4",
+    "verification": "モック／DB直接変更（M12）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3104",
+    "msgid": "IMPORT_FAILURE",
+    "status": 500,
+    "viewpoints": [
+      "VP-SW-BD-17",
+      "VP-SW-BD-30",
+      "VP-SW-BD-46"
+    ],
+    "cases": [
+      "S8-01",
+      "S15-04",
+      "S15-05"
+    ],
+    "summary": "`Failed to import item due to a server error...` 500。EP2 Direct のマーカー不一致",
+    "verification": "モック（M3）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3105",
+    "msgid": "UPDATE_FAILURE",
+    "status": 500,
+    "viewpoints": [
+      "VP-SW-BD-17",
+      "VP-SW-EG-03",
+      "VP-SW-EG-10"
+    ],
+    "cases": [
+      "S7-02",
+      "S15-04",
+      "S15-10"
+    ],
+    "summary": "`Failed to update item {recid}...` 500。EP4 Direct のマーカー不一致、EP4 Workflow のエラーのみ",
+    "verification": "モック（M4、M11）＋実環境（S7-02、実機確認要）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3106",
+    "msgid": "DELETE_FAILURE",
+    "status": 500,
+    "viewpoints": [
+      "VP-SW-BD-19"
+    ],
+    "cases": [
+      "S15-06"
+    ],
+    "summary": "`Failed to delete item {recid}...` 500。EP5 の `WekoWorkflowException`",
+    "verification": "モック（M6）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3107",
+    "msgid": "ACTIVITY_NOT_FOUND_AFTER_CREATE",
+    "status": 501,
+    "viewpoints": [
+      "VP-SW-BD-20"
+    ],
+    "cases": [
+      "S15-07"
+    ],
+    "summary": "`Activity created, but not found.` 501",
+    "verification": "実施不可（到達経路なし。S15-07 でクローズ）",
+    "match": "明示（ただし実施不可クローズ）",
+    "reachability_note": "実施不可（到達経路なし。S15-07 でクローズ） / 明示（ただし実施不可クローズ）"
+  },
+  {
+    "code": "3108",
+    "msgid": "DATABASE_UNAVAILABLE",
+    "status": 503,
+    "viewpoints": [
+      "VP-SW-BD-13",
+      "VP-SW-BD-19"
+    ],
+    "cases": [
+      "S14-01",
+      "S14-04",
+      "S15-06"
+    ],
+    "summary": "`Failed to access the database...` 503",
+    "verification": "実環境＋モック（M13）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3109",
+    "msgid": "REDIS_UNAVAILABLE",
+    "status": 503,
+    "viewpoints": [
+      "VP-SW-BD-13",
+      "VP-SW-BD-19"
+    ],
+    "cases": [
+      "S14-02",
+      "S14-04",
+      "S15-06"
+    ],
+    "summary": "`Failed to access the cache server...` 503",
+    "verification": "実環境＋モック",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3110",
+    "msgid": "SEARCH_ENGINE_UNAVAILABLE",
+    "status": 503,
+    "viewpoints": [
+      "VP-SW-BD-13",
+      "VP-SW-BD-19"
+    ],
+    "cases": [
+      "S14-03",
+      "S14-04",
+      "S15-06"
+    ],
+    "summary": "`Failed to access the search service...` 503",
+    "verification": "実環境＋モック",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3201",
+    "msgid": "INTERNAL_SERVER_ERROR",
+    "status": 501,
+    "viewpoints": [
+      "VP-SW-AU-21",
+      "VP-SW-BD-03",
+      "VP-SW-BD-16",
+      "VP-SW-BD-17",
+      "VP-SW-BD-21",
+      "VP-SW-BD-41",
+      "VP-SW-BD-42"
+    ],
+    "cases": [
+      "S5-09",
+      "S15-01",
+      "S15-02",
+      "S15-03",
+      "S15-08",
+      "S15-09",
+      "S15-13"
+    ],
+    "summary": "`Internal Server Error` 501。ハンドラ、チェック結果の想定外、マーカー一致、シリアライズ検証",
+    "verification": "モック（M1、M2、M7、M9、M10）＋実環境（S5-09）",
+    "match": "明示",
+    "reachability_note": ""
+  },
+  {
+    "code": "3202",
+    "msgid": "UNEXPECTED_DURING_DELETION",
+    "status": 501,
+    "viewpoints": [
+      "VP-SW-BD-19"
+    ],
+    "cases": [
+      "S15-06"
+    ],
+    "summary": "`Unexpected error occurred during deletion.` 501",
+    "verification": "モック（M5）",
+    "match": "明示",
+    "reachability_note": ""
+  }
+]

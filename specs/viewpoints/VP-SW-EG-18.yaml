@@ -1,0 +1,9 @@
+id: VP-SW-EG-18
+title: 詳細由来：メタデータ形式の判定が未知の形式を返すと、未対応ファイル形式として 415（1411）を返す（防御分岐。実環境では到達しないためモックで検証）
+rationale: "前提：Direct のクライアント（C-D）。EP4 は登録済みアイテム（R1）。正常な登録ファイルと正しい Packaging・Digest。登録形式の判定（`check_import_file_format`）が JSON／XML／TSV/CSV 以外の値を返す状態（モック M14）。操作：M14 を注入して EP2 を呼ぶ。続けて R1 に対し EP4 を呼ぶ（M14 は同じ値を返す）。期待結果：両 EP とも HTTP 415、`@type` が `MetadataFormatNotAcceptable`、`WEKO_SWORDSERVER_E_1411`（`Unsupported file format: {file_format}`。形式名が文言に入る）。1409（形式が有効でない）・1410（XML の Direct 登録不可）とは別のコードで、500 系にならない。内部情報を含まない。ログはハンドラ行が WARNING（4xx。BD-60 と同じ基準）。"
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0
+    note: "1411"
+risk: medium
+parents: []

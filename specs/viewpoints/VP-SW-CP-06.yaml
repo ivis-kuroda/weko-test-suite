@@ -1,0 +1,8 @@
+id: VP-SW-CP-06
+title: 未知の `@type`（`Conflict`・`ServiceUnavailable`・`NotImplemented`）を扱える
+rationale: 前提：呼び出し元。操作：409・503・501 の応答を渡す。期待結果：未知の `@type` でも落ちずに処理できる。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §5.3
+risk: medium
+parents: []

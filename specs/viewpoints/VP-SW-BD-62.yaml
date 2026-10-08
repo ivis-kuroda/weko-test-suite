@@ -1,0 +1,8 @@
+id: VP-SW-BD-62
+title: ログに認証情報・機密情報を含めない
+rationale: 前提：有効トークンで任意のエラーを発生させる。操作：ログを検索する。期待結果：アクセストークン、パスワード、不要な個人情報が記録されていない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §5.2, §5.4
+risk: low
+parents: []

@@ -1,0 +1,8 @@
+id: VP-SW-BD-73
+title: EP2・EP4：Digest 不一致
+rationale: 前提：本文と一致しない Digest。操作：EP2・EP4 で送る。期待結果：HTTP 412、コード帯 `WEKO_SWORDSERVER_E_13xx`。EP4 も同じ。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+risk: medium
+parents: []

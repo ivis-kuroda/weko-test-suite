@@ -1,0 +1,8 @@
+id: VP-SW-AU-15
+title: Direct 経路ではアクティビティ用スコープ不足で 403 にならない（詳細由来）
+rationale: 前提：Direct のクライアント。トークン②。操作：EP2・EP4・EP5 を呼ぶ。期待結果：スコープ不足の専用 403 にならず、通常どおり処理される。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.3
+risk: high
+parents: []

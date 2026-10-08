@@ -1,0 +1,9 @@
+id: VP-SW-AU-32
+title: GET 系ではスコープ判定を追加していない
+rationale: 前提：トークン②。操作：EP1・EP3 を呼ぶ。期待結果：403（12xx）にならない。改修前と同じ結果。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.1, §4.3
+    note: GET への言及なし。U-12
+risk: high
+parents: []

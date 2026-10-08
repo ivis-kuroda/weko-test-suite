@@ -1,0 +1,8 @@
+id: VP-SW-BD-70
+title: EP1：レート制限
+rationale: 前提：認可済みトークン。操作：レート制限を超える回数 EP1 を呼ぶ。期待結果：超過時は 429、コード帯 `WEKO_SWORDSERVER_E_23xx`、ログは WARNING。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3, §5.4
+risk: medium
+parents: []

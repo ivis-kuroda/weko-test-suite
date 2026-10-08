@@ -1,0 +1,10 @@
+id: VP-SW-BD-41
+title: SWORD レスポンスのシリアライズ検証エラーで内部のフィールド名・型情報が出ない
+rationale: 前提：レスポンス生成が検証エラーになる状況（モック）。操作：対象エンドポイントを呼ぶ。期待結果：HTTP 501、`@type` が `NotImplemented`、コード帯 `WEKO_SWORDSERVER_E_32xx`（3201）。応答は固定の想定外メッセージ（固定の「Internal Server Error」）。変更前のフィールド名・型情報を含まない。詳細はログにのみ残る。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §0.1, §3.4, §4.1
+  - kind: design
+    ref: detailed_design.md v1.3 §2.2
+risk: high
+parents: []

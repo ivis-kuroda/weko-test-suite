@@ -1,0 +1,10 @@
+id: VP-SW-BD-74
+title: EP2・EP4：Packaging・Content-Type・構成不正・XML メタデータ
+rationale: 前提：非対応の Packaging／Content-Type。SWORDBagIt でメタデータ欠落／SimpleZip に sword.json あり／RO-Crate で ro-crate-metadata.json なし。XML メタデータのファイル（Direct のクライアント）。操作：それぞれ EP2・EP4 で送る。期待結果：非対応の Packaging／Content-Type は HTTP 415、コード帯 `WEKO_SWORDSERVER_E_14xx`。構成不正はそれぞれ 415 または 400（WEKO_SWORDSERVER_E_1404〜1407 のいずれか）で、不備の種類が区別できる。XML メタデータの Direct 登録は 415（WEKO_SWORDSERVER_E_1410）で、形式の問題として返り 500 にならない。EP4 も同じ。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0
+risk: medium
+parents: []

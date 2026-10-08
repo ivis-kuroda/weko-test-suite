@@ -1,0 +1,8 @@
+id: VP-SW-CP-07
+title: 削除失敗が 400 から 500／501 に変わった影響
+rationale: 前提：呼び出し元の再試行制御が 400／500／501 で分かれている場合。操作：BD-19 を再現する。期待結果：呼び出し元の挙動（再試行する／しない）が想定どおり。差異は記録して共有する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.3
+risk: medium
+parents: []

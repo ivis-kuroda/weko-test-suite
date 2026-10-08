@@ -1,0 +1,8 @@
+id: VP-SW-EG-12
+title: 詳細由来：PUT の対象アイテムの整合性
+rationale: 前提：複数アイテムを含むファイル／未登録アイテム／recid と ID が不一致。操作：EP4 を呼ぶ。期待結果：それぞれ 400（WEKO_SWORDSERVER_E_1504／1505／1506）。互いに区別できる文言。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0
+risk: medium
+parents: []

@@ -1,0 +1,10 @@
+id: VP-SW-BD-17
+title: Direct 登録・更新の失敗は、失敗理由の文字列分類（マーカー一致／不一致）と EP で結果が決まる
+rationale: "前提：Direct のクライアント。インポート処理が返す失敗理由の文字列を2通り用意する（モック）。(i) 想定外例外マーカー（`Unexpected error`、または `Unexpected error:` で始まる値）に一致、(ii) マーカーに一致しない文字列（例: `sqlalchemy error:`。接続障害ではないもの）。操作：失敗理由（i）(ii) × EP（EP2 登録／EP4 更新）の4組合せを実行する（下表）。期待結果：下表のとおり。(i) は 501／`NotImplemented`／`32xx`（3201。データ不整合などを起因とし、再試行しても直らないため）、(ii) は 500（変更前 400）／`@type` は `ServerError`／`31xx`（EP2 は 3104、EP4 は 3105。失敗理由が文字列で weko_swordserver 側では解析しないと分類できないため）。EP2 と EP4 でコードは別（登録用／更新用）。(i) と (ii) は互いに別の結果。"
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.1, §4.2
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0, §2.3
+risk: high
+parents: []

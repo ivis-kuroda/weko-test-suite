@@ -1,0 +1,8 @@
+id: VP-SW-AU-24
+title: 正常な On-Behalf-Of
+rationale: 前提：On-Behalf-Of を許可する設定。許可ロールの対象ユーザ。操作：EP2 を呼ぶ。期待結果：登録が成功し、共有者（contributor）に対象ユーザーが入る。所有者（owner）は On-Behalf-Of の対象ではなく、トークンのユーザー（実装由来。基本設計に規定なし。U-08）。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+risk: high
+parents: []

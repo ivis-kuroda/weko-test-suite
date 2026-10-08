@@ -1,0 +1,8 @@
+id: VP-SW-UI-23
+title: 別ユーザーが画面でアイテムを編集中に SWORD から削除する（EP5 の 409）
+rationale: 前提：Direct のクライアント（C-D）。アイテム編集画面を開いたまま。操作：EP5 で削除する。編集を終えてから再度削除する。期待結果：編集中は HTTP 409、`@type` が `Conflict`、コード帯 `WEKO_SWORDSERVER_E_22xx`、編集終了後は削除成功。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.3
+risk: medium
+parents: []

@@ -1,0 +1,9 @@
+id: VP-SW-EG-19
+title: 詳細由来：EP5 の直接削除で、削除処理側のレコード解決が空を返すと 404（2102）を返す（防御分岐。実環境では到達しないためモックで検証）
+rationale: "前提：Direct のクライアント（C-D）。DOI なしの登録済みアイテム（R4。再作成済み）。`delete_item_directly` 内のレコード解決（`Resolver.resolve`）が空（`None`）を返す状態（モック M15。EP5 冒頭の存在確認（2101）は通過させる）。操作：M15 を注入して EP5 を呼ぶ。M15 を OFF にして EP3 で R4 が残っていることを確認する。期待結果：HTTP 404、`@type` が `NotFound`、`WEKO_SWORDSERVER_E_2102`（`Record not found.`。定義文言に recid を含まない）。2101（`Item not found. (recid=...)`）とは別コードだが同じ 21xx 帯・404。R4 は削除されず EP3 で 200。内部情報を含まない。4xx のログ基準（BD-60）: 送出前に `current_app.logger.error`（`Record not found: {recid}.`）が出るため、ハンドラ行 WARNING と併存すれば BD-60 と同じ「実装不具合候補」（A-5。U-20）として記録する。"
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0
+    note: "2102"
+risk: medium
+parents: []

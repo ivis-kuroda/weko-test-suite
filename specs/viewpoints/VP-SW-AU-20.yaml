@@ -1,0 +1,8 @@
+id: VP-SW-AU-20
+title: On-Behalf-Of を許可しない設定での指定
+rationale: 前提：サーバー設定で On-Behalf-Of を許可しない（False）環境。操作：On-Behalf-Of ヘッダ付きで EP2 を呼ぶ。期待結果：HTTP 412、コード帯 `WEKO_SWORDSERVER_E_12xx`。対応主体はクライアント。EP1・EP3 でも同じ 412 になる。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.1, §4.3
+risk: high
+parents: []

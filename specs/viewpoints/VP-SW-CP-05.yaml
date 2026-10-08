@@ -1,0 +1,8 @@
+id: VP-SW-CP-05
+title: 503 を受けたときの再試行・障害判定
+rationale: 前提：呼び出し元。操作：DB／Redis／ES 停止で 503 を発生させる。期待結果：呼び出し元が 5xx を一律障害扱いするか、503 を再試行対象として扱うかを記録する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §5.3
+risk: medium
+parents: []

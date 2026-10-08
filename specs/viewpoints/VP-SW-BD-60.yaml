@@ -1,0 +1,8 @@
+id: VP-SW-BD-60
+title: 4xx は WARNING
+rationale: "前提：400／404／409／412／413／415／429 のうち複数。操作：各エラーを発生させログのレベルを確認する。期待結果：ハンドラ行（`[code] METHOD path: message` 書式）がすべて WARNING。INFO で記録されない。かつ 4xx 応答のログに ERROR 行がない（同一リクエストに ERROR 行が併存すれば不合格。送出前の `current_app.logger.error` が出る場合は「実装不具合候補」として記録。U-20）。"
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §5.4
+risk: low
+parents: []

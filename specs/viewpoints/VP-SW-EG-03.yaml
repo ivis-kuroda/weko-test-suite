@@ -1,0 +1,9 @@
+id: VP-SW-EG-03
+title: 詳細由来：PUT でロック中のとき、Workflow 経路は SWORD 側のロック判定がなく 409 にならない（Workflow 側の差異）
+rationale: 前提：対象アイテムがロック中（編集予定のロック）。Workflow のクライアント。操作：同じアイテムを EP4 で更新する。期待結果：Workflow 経路は SWORD 側のロック判定がなく 409 にならない。ワークフロー側のアクティビティ作成（編集準備）でロックが検出されてアクティビティが作成されず、継続 URL のないエラーとして 500（WEKO_SWORDSERVER_E_3105）。24xx にならない。Direct の 409（2201）は BD-10 で確認し、本観点の比較対象とする。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.4
+    note: 注意事項、処理仕様 6
+risk: high
+parents: []

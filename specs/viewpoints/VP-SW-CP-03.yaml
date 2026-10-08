@@ -1,0 +1,8 @@
+id: VP-SW-CP-03
+title: "`error` 先頭のコードを解釈できないクライアントが動作する"
+rationale: 前提：コードを解釈しないクライアント。操作：代表エラーを発生させる。期待結果：コードを無視して、HTTPステータスと `@type` で従来どおり判定できる。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.4
+risk: medium
+parents: []

@@ -1,0 +1,8 @@
+id: VP-SW-BD-30
+title: Workflow 登録の部分完了は 400 のまま。サーバー内部エラーと区別できる
+rationale: "前提：Workflow のクライアント。アクティビティは作成されるが後続操作が必要な登録内容。比較用に BD-17 の条件も用意。操作：EP2 で登録する。続けて BD-17 の条件（Direct、失敗理由 (ii)）を実行し、応答を比較する。期待結果：HTTP 400、コード帯 `WEKO_SWORDSERVER_E_24xx`、継続用 URL が `error` に含まれる。比較: 本観点は `24xx`／400（対応主体はクライアント）、BD-17 (ii) は `31xx`／500、BD-17 (i) は `32xx`／501（対応主体はサーバー管理者）。コード帯とステータスで区別できる。"
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.1, §4.2, §7
+risk: high
+parents: []

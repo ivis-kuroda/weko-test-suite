@@ -1,0 +1,8 @@
+id: VP-SW-BD-03
+title: コード帯が大分類・中分類と対応する
+rationale: 前提：各帯を発生させる代表入力を用意（認可/入力値/形式/データ検証/リソース状態/ロック/レート制限/処理未完了/内部処理/想定外）。操作：帯ごとに代表エラーを1件ずつ発生させる。期待結果：コード帯が 12xx／13xx／14xx／15xx／21xx／22xx／23xx／24xx／31xx／32xx のいずれか。クライアント起因は 1xxx、状態・運用条件は 2xxx、サーバー起因は 3xxx。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1
+risk: high
+parents: []

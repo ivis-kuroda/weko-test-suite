@@ -1,0 +1,8 @@
+id: VP-SW-BD-31
+title: Workflow 更新の部分完了も 400 のまま
+rationale: 前提：Workflow のクライアント。更新でアクティビティが作成される条件。操作：EP4 で更新する。期待結果：HTTP 400、コード帯 `WEKO_SWORDSERVER_E_24xx`、継続用 URL を含む。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.1
+risk: medium
+parents: []

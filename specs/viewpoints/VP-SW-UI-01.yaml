@@ -1,0 +1,8 @@
+id: VP-SW-UI-01
+title: 登録方式を Direct／Workflow に切り替えると POST の経路が変わる
+rationale: 前提：管理画面の SWORD API 設定で登録方式を切り替えられる。操作：登録方式を Direct にして EP2 で登録する。続けて Workflow に切り替えて同じ登録を行う。期待結果：Direct は直接アイテム化される。Workflow はアクティビティが作成され、ワークフロー画面で継続する（または `WEKO_SWORDSERVER_E_24xx`）。切り替えは即座に反映される。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1, §4.3
+risk: medium
+parents: []

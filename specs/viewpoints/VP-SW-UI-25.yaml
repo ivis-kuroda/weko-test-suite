@@ -1,0 +1,8 @@
+id: VP-SW-UI-25
+title: 管理画面インポートのチェックエラーが固定文言になる
+rationale: 前提：不正ファイル（UTF-8 不正／JSON 構文不正）を管理画面からインポートする。操作：インポートチェックを実行する。期待結果：内部例外文字列を含まない。UTF-8 不正は固定英語文言、JSON 構文不正は行・列のみ（文言はロケールで訳される）、想定外は Unexpected error occurred.。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.7
+risk: medium
+parents: []

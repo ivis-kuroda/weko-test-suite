@@ -1,0 +1,8 @@
+id: VP-SW-UI-24
+title: 管理画面インポートのエラー表示が従来と変わらない（詳細由来）
+rationale: 前提：管理画面（`weko-search-ui`）の一括インポートで Elasticsearch 障害を起こす。操作：インポートを実行する。期待結果：画面に従来と同じ「Elasticsearch の更新失敗」相当のエラー表示が出る。SWORD 側の改修で画面表示が変わらない。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.8
+risk: medium
+parents: []

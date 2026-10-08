@@ -1,0 +1,8 @@
+id: VP-SW-BD-46
+title: 内部詳細はログに記録される
+rationale: 前提：BD-17 を再現。操作：アプリケーションログを確認する。期待結果：原因詳細（例外情報）が `current_app.logger` 経由のログに残る。エラーコードとエンドポイント・recid 等の最小限の文脈が付く。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.2, §5.4
+risk: high
+parents: []

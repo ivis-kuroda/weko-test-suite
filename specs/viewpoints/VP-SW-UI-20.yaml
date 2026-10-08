@@ -1,0 +1,8 @@
+id: VP-SW-UI-20
+title: 継続用 URL でワークフロー画面を開き、登録を完了できる
+rationale: 前提：BD-30 の `WEKO_SWORDSERVER_E_24xx` 応答。操作：応答の継続 URL を開き、画面で残りの入力と承認を行う。期待結果：画面が開く。承認後、EP3 でアイテムが取得できる（正常応答）。URL の有効性・ログイン要否は U-07 の範囲で確認。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1, §4.2
+risk: medium
+parents: []

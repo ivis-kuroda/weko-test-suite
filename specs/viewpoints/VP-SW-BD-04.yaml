@@ -1,0 +1,8 @@
+id: VP-SW-BD-04
+title: 同じ状況は同じコード（recid 不存在・削除済みを EP3・EP4・EP5 で確認）
+rationale: 前提：登録済みアイテム、存在しない recid、削除済み recid。操作：存在しない recid／削除済み recid（削除済みアイテム）を、EP3・EP4・EP5 のそれぞれに指定する。期待結果：3エンドポイントとも同一のコード（コード帯 `WEKO_SWORDSERVER_E_21xx`）・同一の文言構造（recid 部分のみ異なる）。HTTP 404。クライアントが recid を確認できる文言。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1, §4.3
+risk: medium
+parents: []

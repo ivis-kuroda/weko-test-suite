@@ -1,0 +1,8 @@
+id: VP-SW-AU-31
+title: 許可されたロールが、データ不備などで別のエラーを受けたときにだけ SWORD コードが付く
+rationale: 前提：許可されたロール。操作：入力不備のリクエストを送る。期待結果：認可では通過し、13xx〜15xx などの SWORD コードが付く。認可エラーと入力エラーが混ざらない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.2, §4.1
+risk: high
+parents: []

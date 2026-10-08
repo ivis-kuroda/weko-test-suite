@@ -1,0 +1,8 @@
+id: VP-SW-UI-05
+title: 登録方式の設定値が不正なとき（設定不整合）
+rationale: 前提：管理画面では設定できない不正値を DB 上で与える（再現困難な場合はモックで代替）。操作：EP4 を呼ぶ。続けて EP5（DOI なしのアイテム）を呼ぶ。期待結果：HTTP 500、コード帯 `WEKO_SWORDSERVER_E_31xx`（EP4 は 3103、EP5 は 3102。詳細 2.0。管理設定の不整合。管理者が設定を通常どおり管理画面から設計している限り起きないため 500）。内部情報なし。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.1, §4.2
+risk: high
+parents: []

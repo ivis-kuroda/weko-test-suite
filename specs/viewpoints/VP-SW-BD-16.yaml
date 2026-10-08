@@ -1,0 +1,8 @@
+id: VP-SW-BD-16
+title: 型で判定できない DB エラー（接続・一時障害以外）は 503 にしない
+rationale: "前提：接続・一時障害ではない DB エラー（`IntegrityError` 等）を、未捕捉で到達する経路（例: EP3 の DB 参照）に注入（モック）。操作：対象エンドポイントを呼ぶ。期待結果：HTTP 501、`@type` が `NotImplemented`、コード帯 `WEKO_SWORDSERVER_E_32xx`。503・500 にならない（データ不整合・実装不具合であり、再試行しても直らないため 501）。"
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.1, §3.4, §4.1
+risk: high
+parents: []

@@ -1,0 +1,10 @@
+id: VP-SW-BD-13
+title: 依存先（DB／Redis／Elasticsearch）障害は 503
+rationale: 前提：障害注入対象を1つずつ停止または接続断にする（下表）。Direct のクライアント。操作：下表の対象×EP を呼ぶ。期待結果：下表のとおり。HTTP 503、`@type` が `ServiceUnavailable`、コード帯 `WEKO_SWORDSERVER_E_31xx`。依存先ごとに別のコード（3108／3109／3110）。500・400 にならない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.1, §3.4, §4.3, §7
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0, §2.4, §2.5, §2.8
+risk: high
+parents: []

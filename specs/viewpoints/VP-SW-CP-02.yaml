@@ -1,0 +1,8 @@
+id: VP-SW-CP-02
+title: HTTPステータスだけを見る既存クライアントが動作する
+rationale: 前提：HTTPステータスのみで判定するクライアント。操作：400／404／413 などの既存エラーを発生させる。期待結果：変更対象（3.4）以外のステータスが改修前と同じ。コードを無視しても動作する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §5.3, §4.4
+risk: medium
+parents: []

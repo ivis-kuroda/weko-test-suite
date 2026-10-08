@@ -1,0 +1,8 @@
+id: VP-SW-BD-05
+title: HTTPステータスが `ErrorType` と矛盾しない
+rationale: 前提：BD-01 と同じ。操作：代表エラー（400／404／412／413／415）を発生させる。期待結果：HTTPステータスが `@type` と対応し、独自コードの有無でステータスが変わらない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §5.3
+risk: medium
+parents: []

@@ -1,0 +1,8 @@
+id: VP-SW-EG-06
+title: 詳細由来：DOI 付与済みアイテムの削除
+rationale: 前提：DOI 付与済みアイテム。操作：EP5 を呼ぶ。期待結果：400（WEKO_SWORDSERVER_E_2106）。409・500 にならない。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0, §2.5
+risk: medium
+parents: []

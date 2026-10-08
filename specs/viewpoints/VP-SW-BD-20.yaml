@@ -1,0 +1,8 @@
+id: VP-SW-BD-20
+title: 【テスト不可・実施不可でクローズ】Workflow 経路でアクティビティが見つからない場合は 501
+rationale: 前提：Workflow のクライアント。アクティビティ作成後に取得できない状況（モック）。操作：EP3 でステータスを取得する。期待結果：HTTP 501（変更前 404）、`@type` が `NotImplemented`、コード帯 `WEKO_SWORDSERVER_E_31xx`（3107。作成直後にアクティビティが見つからない内部不整合で、再試行しても直らないため 501）。500 ではない。テスト不可：3107 は EP2・EP4 の Workflow 応答生成でのみ到達し、EP3 では再現できないため実施しない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4
+risk: high
+parents: []

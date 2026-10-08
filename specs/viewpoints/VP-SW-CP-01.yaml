@@ -1,0 +1,8 @@
+id: VP-SW-CP-01
+title: 正常系の応答・URL・メソッドが変わらない（EP1 のサービス文書を含む）
+rationale: 前提：改修前の正常応答の記録。操作：EP1〜EP5 の正常系を実行して比較する。期待結果：URL プレフィックス `/sword`、メソッド、応答形式、ステータスが改修前と同じ。EP1 は変更前と同じサービス文書。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3, §5.3
+risk: medium
+parents: []

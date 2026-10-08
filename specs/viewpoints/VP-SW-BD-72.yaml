@@ -1,0 +1,10 @@
+id: VP-SW-BD-72
+title: EP2・EP4：Content-Length 超過（境界値を含む）
+rationale: 前提：Content-Length 上限をテスト用の小さい値に設定する（仕様書 S0-12。設定値を記録）。Content-Length ヘッダ値が上限超過／上限ちょうど／上限+1 になるリクエスト。操作：EP2・EP4 で、Content-Length ヘッダ値が上限超過／上限ちょうど／上限+1 のリクエストを送る。期待結果：上限超過・上限+1 は HTTP 413、コード帯 `WEKO_SWORDSERVER_E_13xx`（1305）。許容サイズが分かる文言（文言に要求サイズと上限が含まれる）。上限ちょうどは受理される。EP4 も同じ。境界は、ヘッダがあればリクエスト全体の Content-Length ヘッダ値（multipart のオーバーヘッド込み）、なければファイルサイズで判定される（`decorators.py`）。どちらを境界にしたかを記録する。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0
+risk: medium
+parents: []

@@ -1,0 +1,8 @@
+id: VP-SW-BD-01
+title: 独自コードが `error` の先頭に付与される
+rationale: "前提：Workflow 経由ではない Direct のクライアント。操作：EP2 で `Content-Disposition` なしなど入力不備のリクエストを送る。期待結果：応答 `error` が `\"WEKO_SWORDSERVER_E_xxxx: <メッセージ>\"` 形式。コードの後にコロンと空白が続く。"
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.2
+risk: medium
+parents: []

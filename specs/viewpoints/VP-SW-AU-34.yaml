@@ -1,0 +1,9 @@
+id: VP-SW-AU-34
+title: アクティビティ用以外のスコープ不足は汎用 403（独自コードなし）
+rationale: 前提：Direct のクライアント。トークン⑤（スコープを1つも付与せずに発行）。操作：EP2・EP4・EP5 を呼ぶ。EP1・EP3 も呼ぶ。期待結果：EP2・EP4・EP5 は HTTP 403。`error` に `WEKO_SWORDSERVER_E_` の独自コードが付かない（汎用 403）。改修前と同じ文言・形式（C-AUTH-1）。AU-10 のスコープ不足の専用 403（`WEKO_SWORDSERVER_E_12xx` 付き）と文言・コードで区別できる。アイテムは作成・変更・削除されない。EP1・EP3 はスコープ判定がなく 403 にならない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §5.2
+    note: U-02
+risk: high
+parents: []

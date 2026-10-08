@@ -1,0 +1,8 @@
+id: VP-SW-BD-51
+title: カタログのないロケールでも英語にフォールバックする
+rationale: 前提：日本語など、SWORD 用カタログのないロケールを指定。操作：BD-50 と同じ操作。期待結果：英語の本文が返り、プレースホルダ部分（recid 等）も正しく埋まる。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §7
+risk: low
+parents: []

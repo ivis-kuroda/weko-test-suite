@@ -1,0 +1,10 @@
+id: VP-SW-AU-21
+title: On-Behalf-Of 失敗の入力パターン表（対象ユーザー不在／ロール不許可／DB 接続障害／DB 接続障害以外）
+rationale: 前提：On-Behalf-Of を許可する設定。下表の4条件を用意（DB 障害はモックまたは DB 停止）。操作：On-Behalf-Of ヘッダ付きで EP2 を呼ぶ（4条件それぞれ）。期待結果：下表のとおり。互いに別のステータス・コードで区別でき、503・500・501 の内部情報は含まれない（C-5xx-1〜3）。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.1, §3.4, §4.3
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0, §2.6
+risk: high
+parents: []

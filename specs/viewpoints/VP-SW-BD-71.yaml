@@ -1,0 +1,8 @@
+id: VP-SW-BD-71
+title: EP2・EP4：ファイルの不備
+rationale: 前提：Direct のクライアント。EP4 は登録済みアイテム。操作：ファイルパートなし／ファイル未選択／Content-Disposition 取得不可／Content-Disposition のファイル名と本文のファイル名が不一致でそれぞれ、EP2・EP4 に送る。期待結果：HTTP 400、コード帯 `WEKO_SWORDSERVER_E_13xx`。不備の種類が区別できる文言。EP4 も EP2 と同じステータス・コード帯。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §4.3
+risk: medium
+parents: []

@@ -1,0 +1,10 @@
+id: VP-SW-BD-19
+title: 削除（EP5）の失敗・予期しない例外は、Workflow／Direct のどちらのクライアントでも 5xx 系（500／501）
+rationale: 前提：Workflow のクライアントと Direct のクライアント。削除中に、ワークフロー層の包括例外（`WekoWorkflowException`。ワークフロー起因の既知例外）／未知の例外を、それぞれ注入（モック）。依存先障害の型（DB 接続・Redis・ES）のものも用意。操作：各クライアントで EP5 を呼ぶ（既知例外・未知の例外の2通り×クライアント2種）。期待結果：どちらの経路でも 5xx 系で、400 にならない。ワークフロー層の包括例外は HTTP 500（`ServerError`）、コード帯 `WEKO_SWORDSERVER_E_31xx`（3106。依存先障害かどうか特定できないため 500）。未知の例外は HTTP 501（`NotImplemented`）、コード帯 `WEKO_SWORDSERVER_E_32xx`（3202。データ不整合などを起因とし、再試行しても直らないため 501）。依存先障害の型なら 503（BD-13 の経路）。いずれも変更前の 400 ではない。例外文字列を含まない。
+source:
+  - kind: design
+    ref: basic_design.md v1.4 §3.4, §4.3, §7
+  - kind: design
+    ref: detailed_design.md v1.3 §2.0, §2.5
+risk: high
+parents: []

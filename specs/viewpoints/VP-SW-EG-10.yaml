@@ -1,0 +1,8 @@
+id: VP-SW-EG-10
+title: 詳細由来：Workflow 更新でエラーのみ（継続 URL なし）
+rationale: 前提：アクティビティが作成できない失敗（モック）。操作：EP4 を呼ぶ。期待結果：500（WEKO_SWORDSERVER_E_3105）。24xx にならず、内部エラー文字列を含まない。
+source:
+  - kind: design
+    ref: detailed_design.md v1.3 §2.4
+risk: high
+parents: []
