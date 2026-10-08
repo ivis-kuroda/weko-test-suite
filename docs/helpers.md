@@ -53,12 +53,16 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
 | `create_user` | `email`, `password`, `roles[]`, `reset_password?` | `id`, `created`, `roles_added`, `previous` | 中 |
 | `create_token` | `user_email`, `name`, `scopes[]`, `client_name?`, `token_prefix?`, `allow_unknown_scopes?` | `access_token`, `token_id`, `client_id`, `scopes`, `reused`, `previous_scopes` | 中 |
 | `revoke_token` | `access_token` または `name`（+`user_email?`） | `deleted_tokens[]`, `deleted_clients[]` | 中 |
-| `register_sword_client` | `client_id` または `client_name`, `registration_type`, `active?`, `mapping_name?`/`mapping_id?`, `workflow_id?`, `delete_flow_id?`, `duplicate_check?` | `created`, `current`, `previous`, `previous_delete_flow` | 中 |
+| `register_sword_client` | `client_id` または `client_name`, `registration_type`, `active?`, `mapping_name?`/`mapping_id?`, `workflow_id?`/`workflow_name?`, `delete_flow_id?`, `duplicate_check?` | `created`, `current`, `previous`, `previous_delete_flow` | 中 |
 | `set_client_field` | `client_id`, `field`, `value` | `previous`, `value` | 中 |
 | `create_record` | `title`, `owner_email`, `recid?`, `with_doi?`, `item_type_id?` | `recid`, `uuid`, `created`, `doi` | 低（`WekoDeposit.commit` が ES などに触れる） |
 | `insert_doi_pid` | `recid`, `doi?` | `doi`, `created` | 中 |
 | `delete_record_row` | `recid`, `tables?` / `restore` | `backup[]` / `restored_tables` | 中（raw SQL） |
 | `orphan_record` | `recid` / `restore` | 同上（M15 用） | 中（raw SQL） |
+| `baseline` | `emails[]?`, `recids[]?`, `index_ids[]?` | install.sh のデモデータの有無（ロール、ユーザー、アイテムタイプ、マッピング、フロー、ワークフロー、ロケーション、`admin_settings`、件数、recid の PID、関連設定値）。読み取り専用 | 中（raw SQL） |
+| `create_flow` | `flow_name`, `for_delete?`（既定 true）, `with_approval?`, `repository_id?` | `id`, `flow_id`, `created`, `actions` | 中 |
+| `create_workflow` | `flows_name`, `copy_from?`, `itemtype_id?`, `flow_id?`, `delete_flow_id?`/`delete_flow_name?`, `repository_id?`, `index_tree_id?`, `location_id?`, `open_restricted?` | `id`, `created`, `delete_flow_id`, `previous_delete_flow_id` | 中 |
+| `delete_record` | `recid`, `method?`（`soft_delete` 既定 / `pid_only`）, `restore?` | `recid`, `previous`, `deleted` / `restored` | 低（WEKO の `soft_delete` を呼ぶ） |
 | `snapshot` | `tables[]`, `recid?` | 表ごとの `count` と行キー → sha256 | 中（raw SQL、列名はモデルと照合済み） |
 | `inject_fault` | `kind`, `params{}` | `fault_id`, `info` | 低〜中（レシピごと、下表） |
 | `restore_fault` | `kind` または `"all"`（既定）, `fault_id?` | `restored[]`, `swept[]`, `warnings[]` | 低〜中 |
@@ -94,6 +98,22 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
   （選択列の正準 JSON）。`recid` は `items records pids activities` だけを絞り込む
   （他は `recid_filter: false`）。トークン値・パスワード・クライアントシークレット列は選択しない
   （テストで確認）。
+
+- `baseline`: `seeds/bootstrap.py baseline-check` が使う。秘密値（パスワードハッシュ、トークン値、
+  クライアントシークレット）は選択しない。判定（何が欠けているか）はホスト側で行う。
+- `create_flow`: 削除フロー（`workflow_flow_define.flow_type = 2`）を作る。アクションは
+  `begin_action` と `end_action`（`with_approval: true` で間に `approval`。承認者の設定は別途必要で、
+  実機で未確認）。同名のフローがあれば何もしない（種別が違えば `FlowTypeMismatch`）。
+- `create_workflow`: `copy_from` の行から未指定の列を写して `workflow_workflow` に行を追加する
+  （デモのワークフローには触れない）。同名があれば `delete_flow_id` だけを揃え、前の値を返す。
+  `delete_flow_id` が削除フロー（`flow_type = 2`）でなければ拒否する。
+- `delete_record`: PID の状態を DELETED にして「削除済み recid」にする（R3 用）。`soft_delete` は
+  UI と SWORD EP5（Direct）が使う `weko_records_ui.utils.soft_delete` を呼ぶ。`pid_only` は PID 行だけを更新する。
+  `restore: true` で戻す。
+- `register_sword_client`: マッピングは `mapping_id`（存在確認あり）または `mapping_name`（一意でなければ
+  `AmbiguousMapping`）、ワークフローは `workflow_id` または `workflow_name`（同時指定は不可）。
+  デモのマッピングは id 30001/30002、ワークフローは id 1/2。既存のワークフローへ `delete_flow_id` を
+  書くとデモデータを書き換えるので、通常は `create_workflow` で新しいワークフローを作って使う。
 
 ### ホスト側で行うこと（ここでは実装しない）
 
@@ -137,7 +157,7 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
 
 期待値は「`ok: true`」を基本とし、気になる点だけ書く。
 
-1. `docker cp helpers <web>:/opt/ath-helpers` のあと `run.py list` が 15 個前後の名前を返す。
+1. `docker cp helpers <web>:/opt/ath-helpers` のあと `run.py list` が 19 個前後の名前を返す。
    `python` が WEKO の Python 3.6 であること（`python --version`）。
 2. `ping`: `db_ok: true`。失敗したら `appctx.build_app` のファクトリ（`ATH_HELPERS_APP_FACTORY`）を直す。
    インスタンス設定（`invenio.cfg`）が読めているか。
@@ -155,6 +175,14 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
    `rls_raise_on_row`（ロールの BYPASSRLS）、`trigger_raise` の `08006`、`break_workflow_flow` の復元。
 9. `snapshot` の出力にトークン値・パスワードハッシュが無い。`snapshot` を 2 回連続で取り、差分が空。
 10. すべてのコマンドで stdout が 1 行の JSON（WEKO の起動ログが混ざらない）。
+
+11. `baseline` が install.sh 直後の環境で、ロール 4 つ、ユーザー 5 人、アイテムタイプ 30001/30002、
+    マッピング 30001/30002、フロー id 1、ワークフロー id 1/2、ロケーション `local` を返す。
+12. `create_flow`（2 回目は `created: false`）→ `create_workflow`（`copy_from: 2`）→
+    `register_sword_client`（`registration_type: "Workflow"`, `workflow_id`）→ EP5 が Workflow 経路になる。
+13. `delete_record` 後に EP3 が 404 を返す（`soft_delete` が実環境で動くか。動かなければ `pid_only`）。
+
+初回実行の全体手順は `docs/BASELINE.md` と `seeds/bootstrap.py` を参照。
 
 ## 開発
 

@@ -64,12 +64,17 @@ def parse(params):
         raise contract.HelperError(
             "InvalidArgument", "give exactly one of client_id or client_name"
         )
+    if params.get("workflow_id") is not None and params.get("workflow_name") is not None:
+        raise contract.HelperError(
+            "InvalidArgument", "give workflow_id or workflow_name, not both"
+        )
     args = {
         "client_id": client_id,
         "client_name": client_name,
         "mapping_name": contract.optional_str(params, "mapping_name"),
         "mapping_id": contract.optional_int(params, "mapping_id"),
         "workflow_id": contract.optional_int(params, "workflow_id"),
+        "workflow_name": contract.optional_str(params, "workflow_name"),
         "has_delete_flow_id": "delete_flow_id" in params,
         "delete_flow_id": contract.optional_int(params, "delete_flow_id"),
         "active": contract.optional_bool(params, "active", True),
@@ -118,12 +123,34 @@ def run(params):
 
     mapping_id = args["mapping_id"]
     if args["mapping_name"]:
-        mapping = ItemTypeJsonldMapping.query.filter_by(
+        found = ItemTypeJsonldMapping.query.filter_by(
             name=args["mapping_name"], is_deleted=False
-        ).first()
-        if mapping is None:
-            raise contract.HelperError("MappingNotFound", "no mapping %r" % args["mapping_name"])
-        mapping_id = mapping.id
+        ).all()
+        if len(found) != 1:
+            raise contract.HelperError(
+                "MappingNotFound" if not found else "AmbiguousMapping",
+                "%d mappings named %r" % (len(found), args["mapping_name"]),
+            )
+        mapping_id = found[0].id
+    elif mapping_id is not None and (
+        ItemTypeJsonldMapping.query.filter_by(id=mapping_id).one_or_none() is None
+    ):
+        raise contract.HelperError("MappingNotFound", "no mapping with id %s" % mapping_id)
+
+    if args["workflow_name"]:
+        found = WorkFlow.query.filter_by(flows_name=args["workflow_name"]).all()
+        if len(found) != 1:
+            raise contract.HelperError(
+                "WorkflowNotFound" if not found else "AmbiguousWorkflow",
+                "%d workflows named %r" % (len(found), args["workflow_name"]),
+            )
+        args["workflow_id"] = found[0].id
+    elif args["workflow_id"] is not None and (
+        WorkFlow.query.filter_by(id=args["workflow_id"]).one_or_none() is None
+    ):
+        raise contract.HelperError(
+            "WorkflowNotFound", "no workflow with id %s" % args["workflow_id"]
+        )
 
     obj = SwordClient.get_client_by_id(client_id)
     created = obj is None
@@ -152,7 +179,7 @@ def run(params):
             obj.registration_type_id = args["registration_type_id"]
         if mapping_id is not None:
             obj.mapping_id = mapping_id
-        if "workflow_id" in params:
+        if "workflow_id" in params or args["workflow_name"]:
             obj.workflow_id = args["workflow_id"]
     db.session.flush()
 
