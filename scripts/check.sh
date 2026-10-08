@@ -40,4 +40,7 @@ step "specifications against the hub"
 node "$HUB_DIR/scripts/check-spec-round-trip.ts" specs
 node "$HUB_DIR/scripts/validate-specs.ts" specs
 
+step "SWORD mechanics rig end to end (no browser; see docs/stub.md)"
+scripts/rig-e2e.sh --no-browser
+
 printf '\nall checks passed\n'
