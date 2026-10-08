@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Generates the Python test for one case or scenario.
+#
+#   scripts/gen-test.sh TC-SWORD-001 [--force]
+#
+# Output goes to tests/generated/<module>.py, where <module> is the id as a
+# Python identifier (TC-SWORD-001 -> tc_sword_001). Extra arguments are passed
+# to ath-generate-test. A generated case is written back to specs/ as
+# automation.status=generated; review and commit that change with the test.
+set -euo pipefail
+# shellcheck source=lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+if [ $# -lt 1 ]; then
+  echo "usage: scripts/gen-test.sh <TC-id|SC-id> [ath-generate-test options]" >&2
+  exit 2
+fi
+id="$1"
+shift
+
+if [ ! -f "$HUB_DIR/packages/cli/bin/generate-test.ts" ]; then
+  echo "hub not found at $HUB_DIR; run scripts/bootstrap-hub.sh" >&2
+  exit 1
+fi
+
+# Same slug the CLI uses for its default file name.
+module="$(printf '%s' "$id" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/_/g')"
+
+cd "$REPO_ROOT"
+exec node "$HUB_DIR/packages/cli/bin/generate-test.ts" "$id" \
+  --specs specs \
+  --plugin plugin.yaml \
+  --plugin-root . \
+  --lang python \
+  --python-extensions-module weko_suite_ext \
+  --out "tests/generated/${module}.py" \
+  "$@"
