@@ -66,6 +66,22 @@ uv run ruff check . && uv run pytest
 生成物（`specs/viewpoints/`・`fixtures/error-code-map.json`・`docs/spec-trace.md`）は
 機械生成の提案であり、`spec-draft/*` ブランチでレビューしてから取り込む。
 
+## hub の使い方・生成・検証
+
+hub は隣のディレクトリのチェックアウトを使い、コミットは `hub.lock` で固定する
+（詳細は [docs/HUB.md](./docs/HUB.md)）。
+
+```sh
+scripts/bootstrap-hub.sh          # hub を用意（無ければ clone、pnpm install）
+uv sync                           # Python 環境
+scripts/gen-test.sh <TC-id|SC-id> # tests/generated/ にテストを生成
+scripts/check.sh                  # ruff・pytest・hub による検証（CI と同じ）
+```
+
+テストデータは `seeds/build_fixtures.py` が決定的に生成する（[fixtures/README.md](./fixtures/README.md)）。
+`plugin.yaml` の SWORD v3 操作・docker 操作・証跡収集、`weko_suite_ext/`（コンテナ内ヘルパー
+`helpers/` を呼ぶホスト側拡張）、必要な環境変数は `.env.example` にある。
+
 ## 開発の規約
 
 AI エージェント向けの規範は [AGENTS.md](./AGENTS.md) に、コミット規約は
