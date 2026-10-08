@@ -82,6 +82,14 @@ scripts/check.sh                  # ruff・pytest・hub による検証（CI と
 `plugin.yaml` の SWORD v3 操作・docker 操作・証跡収集、`weko_suite_ext/`（コンテナ内ヘルパー
 `helpers/` を呼ぶホスト側拡張）、必要な環境変数は `.env.example` にある。
 
+## 実環境（ローカルの WEKO）での実行
+
+実 WEKO への実行は、ローカルマシンの新しい Claude Code セッションで行う。手順は
+`.claude/skills/` の 4 つのスキル（`weko-env-up`、`sword-test-run`、`weko-fault-injection`、
+`weko-helpers`）にある。引き継ぎ文書 `HANDOFF.md` は一時ブランチ
+`tmp/handoff-sword-error-codes` にだけ置く（機能ブランチには入れない）。
+4xx の前の ERROR 行（A-5）は不合格にせず「保留」として記録する（[docs/TIER1-STATUS.md](./docs/TIER1-STATUS.md)）。
+
 ## 開発の規約
 
 AI エージェント向けの規範は [AGENTS.md](./AGENTS.md) に、コミット規約は
