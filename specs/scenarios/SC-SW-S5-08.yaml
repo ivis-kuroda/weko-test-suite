@@ -1,0 +1,182 @@
+id: SC-SW-S5-08
+title: EP4 の対象アイテムの整合性（複数アイテム 1504／未登録 1505／ID 不一致 1506）
+preconditions: []
+steps:
+  - id: S-MULTI
+    summary: 複数アイテムのファイルを R1 に送ると 400、1504
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=simplezip-multi-item.zip
+        digest: SHA-256=0421ab2a3e203140ae7c6bfcf6898adb8296a99b76693b7288e73080994f9303
+        file: fixtures/generated/simplezip-multi-item.zip
+        filename: simplezip-multi-item.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1504: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-NOID
+    summary: ID のない（未登録の）アイテムを R1 に送ると 400、1505
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=put-item-without-id.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/put-item-without-id.zip
+        filename: put-item-without-id.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1505: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: BadRequest
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-MULTI
+    produces: {}
+    viewpoints: []
+  - id: S-GEN-MISMATCH
+    summary: recid（R1）と異なる ID（R2）を持つ EP4 ファイルを作る
+    action:
+      operation: OP-FIXTURE-PUT-ITEM
+      params:
+        id: "{{env.SW_R2}}"
+        out: fixtures/generated/ath-{{run.id}}-mismatch.zip
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: 0
+          at: exitCode
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-NOID
+    produces:
+      digest:
+        from: stdout
+        pattern: "\"digest\": \"(SHA-256=[0-9a-f]{64})\""
+    viewpoints: []
+  - id: S-MISMATCH
+    summary: ファイル内の ID（R2）が recid（R1）と一致しないと 400、1506
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=ath-{{run.id}}-mismatch.zip
+        digest: "{{step.digest}}"
+        file: fixtures/generated/ath-{{run.id}}-mismatch.zip
+        filename: ath-{{run.id}}-mismatch.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1506: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: BadRequest
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-GEN-MISMATCH
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1504
+    - Multiple\ items\ found\ in\ import\ file\.\ Only\ one\ item\ is\ allowed\ for\ PUT\ requests\.
+    - WEKO_SWORDSERVER_E_1505
+    - "This\\ item\\ is\\ not\\ registered\\ yet:"
+    - WEKO_SWORDSERVER_E_1506
+    - "Item\\ id\\ does\\ not\\ match\\.\\ item:"
+evidenceWaivers: []
+tags:
+  - spec:S5-08
+  - tier:1
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-EG-12
+note: 3 件とも 1504〜1506 はロック判定（2201）より前なので R1 に 3 秒間隔の制約は生じない。『未登録アイテム』は ID なしのファイル（put-item-without-id.zip）で表現した（判断事項）。

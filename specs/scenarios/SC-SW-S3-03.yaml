@@ -1,0 +1,134 @@
+id: SC-SW-S3-03
+title: Workflow 経路のスコープ有無 × EP5（スコープなしは 403、1201。あれば削除できる）
+preconditions: []
+steps:
+  - id: S-CREATE
+    summary: 削除対象のレコードを作る（R4 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s3-03\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces:
+      recid_create: body.result.recid
+    viewpoints: []
+  - id: S-NOACT
+    summary: アクティビティ用スコープなし②（C-W）の EP5 は 403、1201
+    action:
+      operation: OP-SWORD-DELETE
+      params:
+        recid: "{{step.recid_create}}"
+        token: "{{env.SW_TOKEN_W2}}"
+    expect:
+      - kind: http_status
+        status: 403
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1201: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: Forbidden
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-CREATE
+    produces: {}
+    viewpoints: []
+  - id: S-STILL
+    summary: レコードは削除されていない（EP3 が 200）
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{step.recid_create}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-NOACT
+    produces: {}
+    viewpoints: []
+  - id: S-ACT
+    summary: アクティビティ用スコープあり①（C-W）の EP5 は 403 にならず削除できる（204、承認待ちなら 202）
+    action:
+      operation: OP-SWORD-DELETE
+      params:
+        recid: "{{step.recid_create}}"
+        token: "{{env.SW_TOKEN_W}}"
+    expect:
+      - kind: http_status
+        status: 204
+        alsoAccepts:
+          - 202
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-STILL
+    produces: {}
+    viewpoints: []
+cleanup:
+  - id: S-C-RECORD
+    summary: 作成したレコードを片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_create}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1201
+    - Not\ allowed\ operation\ in\ your\ token\ scope\.
+    - Authentication is required
+    - Forbidden
+    - Not allowed operation in your
+evidenceWaivers: []
+tags:
+  - spec:S3-03
+  - tier:1
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-AU-10
+note: 仕様書は R4（再作成済み）を使うが、自分で作ったレコードにして R4 の再作成を不要にした（判断事項）。削除フローは Start+End のみ（オーナー決定）のため成功は 204。202 の場合は削除アクティビティが残る。C-W のトークン②は SW_TOKEN_W2（seeds/bootstrap.py に追加）。

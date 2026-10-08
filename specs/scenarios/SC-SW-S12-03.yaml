@@ -1,0 +1,77 @@
+id: SC-SW-S12-03
+title: error 先頭のコードを解釈しないクライアント（CL-B）が HTTP ステータスと @type で従来どおり判定できる
+preconditions: []
+steps:
+  - id: S-13XX
+    summary: "13xx（Content-Disposition なし）: ステータス 400 と @type（BadRequest）で判定"
+    action:
+      operation: OP-SWORD-POST
+      params:
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: BadRequest
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-21XX
+    summary: "21xx（存在しない recid）: ステータス 404 と @type（NotFound）で判定"
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R9}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 404
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: NotFound
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-13XX
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1303
+    - Cannot\ get\ filename\ by\ Content\-Disposition\.
+    - WEKO_SWORDSERVER_E_2101
+    - Item\ not\ found\.\ \(recid=
+evidenceWaivers: []
+tags:
+  - spec:S12-03
+  - tier:1
+  - blocked:pre-change-baseline
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-CP-03
+note: CL-B は error を読まないクライアント。error には触れず status と @type だけを判定することで表現した。@type は詳細設計 2.0 の ErrorType（1303 BadRequest、2101 NotFound）。

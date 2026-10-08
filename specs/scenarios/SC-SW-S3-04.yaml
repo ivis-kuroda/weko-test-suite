@@ -1,0 +1,189 @@
+id: SC-SW-S3-04
+title: Direct 経路ではアクティビティ用スコープ不足（トークン②）で 403 にならない
+preconditions: []
+steps:
+  - id: S-CREATE-A
+    summary: EP4 の対象レコードを作る（R1 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s3-04-a\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces:
+      recid_a: body.result.recid
+    viewpoints: []
+  - id: S-CREATE-B
+    summary: EP5 の対象レコードを作る（R4 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s3-04-b\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-CREATE-A
+    produces:
+      recid_b: body.result.recid
+    viewpoints: []
+  - id: S-EP2
+    summary: トークン②（C-D）で EP2 は 403（1201）にならず登録できる
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_2}}"
+    expect:
+      - kind: http_status
+        status: 201
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-CREATE-B
+    produces:
+      recid_new:
+        from: body.@id
+        pattern: /sword/deposit/(\d+)$
+    viewpoints: []
+  - id: S-GEN
+    summary: EP4 用のファイルを作る
+    action:
+      operation: OP-FIXTURE-PUT-ITEM
+      params:
+        id: "{{step.recid_a}}"
+        out: fixtures/generated/ath-{{run.id}}-s3-04.zip
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: 0
+          at: exitCode
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP2
+    produces:
+      digest:
+        from: stdout
+        pattern: "\"digest\": \"(SHA-256=[0-9a-f]{64})\""
+    viewpoints: []
+  - id: S-EP4
+    summary: トークン②で EP4 は 403（1201）にならず更新できる
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=ath-{{run.id}}-s3-04.zip
+        digest: "{{step.digest}}"
+        file: fixtures/generated/ath-{{run.id}}-s3-04.zip
+        filename: ath-{{run.id}}-s3-04.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{step.recid_a}}"
+        token: "{{env.SW_TOKEN_2}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-GEN
+    produces: {}
+    viewpoints: []
+  - id: S-EP5
+    summary: トークン②で EP5 は 403（1201）にならず削除できる（EP4 とは別 recid なので 3 秒の間隔は不要）
+    action:
+      operation: OP-SWORD-DELETE
+      params:
+        recid: "{{step.recid_b}}"
+        token: "{{env.SW_TOKEN_2}}"
+    expect:
+      - kind: http_status
+        status: 204
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP4
+    produces: {}
+    viewpoints: []
+cleanup:
+  - id: S-C-A
+    summary: EP4 の対象を片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_a}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-C-B
+    summary: EP5 の対象を片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_b}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-C-NEW
+    summary: EP2 が作ったレコードを片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_new}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1201
+    - Not\ allowed\ operation\ in\ your\ token\ scope\.
+    - Authentication is required
+    - Forbidden
+    - Not allowed operation in your
+evidenceWaivers: []
+tags:
+  - spec:S3-04
+  - tier:1
+  - needs:real-metadata
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-AU-15
+note: 仕様書の期待は『専用 403 にならず、成功または別要因のエラー』。recid を取って片付けるため、成功（201／200／204）を期待として符号化した。別要因のエラーになる場合（fixtures の CSV がマッピングに合わない等）は produces で失敗する。EP2 の成功には対象環境から書き出したメタデータが必要（fixtures/README.md）。EP4 と EP5 は別レコードを使い、ロック 3 秒の待ちを避ける。

@@ -1,0 +1,175 @@
+id: SC-SW-S6-03
+title: 代表エラー（400／404／412／415）で HTTP ステータスと @type が対応する
+preconditions: []
+steps:
+  - id: S-400
+    summary: "400: Content-Disposition なし（1303）"
+    action:
+      operation: OP-SWORD-POST
+      params:
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: one_of
+          values:
+            - BadRequest
+            - ContentMalformed
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-404
+    summary: "404: 存在しない recid の EP3（2101）"
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R9}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 404
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: NotFound
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-400
+    produces: {}
+    viewpoints: []
+  - id: S-412
+    summary: "412: Digest 不一致（1306）"
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=0000000000000000000000000000000000000000000000000000000000000000
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 412
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: DigestMismatch
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-404
+    produces: {}
+    viewpoints: []
+  - id: S-415
+    summary: "415: 非対応の Packaging（1402）"
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://example.org/ath/unsupported-packaging
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 415
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: PackagingFormatNotAcceptable
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-412
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1303
+    - Cannot\ get\ filename\ by\ Content\-Disposition\.
+    - WEKO_SWORDSERVER_E_2101
+    - Item\ not\ found\.\ \(recid=
+    - WEKO_SWORDSERVER_E_1306
+    - Failed\ to\ verify\ request\ body\ and\ digest\.
+    - WEKO_SWORDSERVER_E_1402
+    - "Not\\ accept\\ packaging:"
+evidenceWaivers: []
+tags:
+  - spec:S6-03
+  - tier:1
+  - blocked:config-toggle-S5-03
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-BD-05
+note: "413 は上限を下げる設定変更（S0-12）が前提のため含めない（オーナー決定: 設定切替が要る部分は手動）。改修前記録との比較（ステータスが変わらないこと）は S0-06 の取得が前提で未実施。"

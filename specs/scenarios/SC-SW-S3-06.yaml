@@ -1,0 +1,238 @@
+id: SC-SW-S3-06
+title: アクティビティ用以外のスコープ不足（トークン⑤）は汎用 403、独自コードなし
+preconditions: []
+steps:
+  - id: S-CREATE-A
+    summary: EP4 の対象レコードを作る（R1 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s3-06-a\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces:
+      recid_a: body.result.recid
+    viewpoints: []
+  - id: S-CREATE-B
+    summary: EP5 の対象レコードを作る（R4 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s3-06-b\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-CREATE-A
+    produces:
+      recid_b: body.result.recid
+    viewpoints: []
+  - id: S-EP2
+    summary: トークン⑤で EP2 は 403（コードなし）
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_5}}"
+    expect:
+      - kind: http_status
+        status: 403
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?!WEKO_SWORDSERVER_E_)
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: one_of
+          values:
+            - Forbidden
+            - AuthenticationFailed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-CREATE-B
+    produces: {}
+    viewpoints: []
+  - id: S-EP4
+    summary: トークン⑤で EP4 は 403（コードなし）
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{step.recid_a}}"
+        token: "{{env.SW_TOKEN_5}}"
+    expect:
+      - kind: http_status
+        status: 403
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?!WEKO_SWORDSERVER_E_)
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: one_of
+          values:
+            - Forbidden
+            - AuthenticationFailed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-EP2
+    produces: {}
+    viewpoints: []
+  - id: S-EP5
+    summary: トークン⑤で EP5 は 403（コードなし）
+    action:
+      operation: OP-SWORD-DELETE
+      params:
+        recid: "{{step.recid_b}}"
+        token: "{{env.SW_TOKEN_5}}"
+    expect:
+      - kind: http_status
+        status: 403
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?!WEKO_SWORDSERVER_E_)
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: one_of
+          values:
+            - Forbidden
+            - AuthenticationFailed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-EP4
+    produces: {}
+    viewpoints: []
+  - id: S-STILL
+    summary: EP5 の対象は削除されていない（EP3 が 200）
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{step.recid_b}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP5
+    produces: {}
+    viewpoints: []
+  - id: S-GET1
+    summary: トークン⑤で EP1 は 403 にならない（200）
+    action:
+      operation: OP-SWORD-GET-SERVICE-DOC
+      params:
+        token: "{{env.SW_TOKEN_5}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-STILL
+    produces: {}
+    viewpoints: []
+  - id: S-GET3
+    summary: トークン⑤で EP3（R1）は 403 にならない（200）
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_5}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-GET1
+    produces: {}
+    viewpoints: []
+cleanup:
+  - id: S-C-A
+    summary: 対象を片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_a}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-C-B
+    summary: 対象を片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_b}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - Authentication is required
+    - Forbidden
+    - Not allowed operation in your
+evidenceWaivers: []
+tags:
+  - spec:S3-06
+  - tier:1
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-AU-34
+note: トークン⑤はスコープなしで発行（SW_TOKEN_5。発行可否は Q-2）。EP4・EP5 は 403 で終わる想定のため自作レコードを使い、万一許可された場合の被害を R1 に及ぼさない。S3-01 の専用 403 との並置比較は S3-01（Tier 2）側で行う。

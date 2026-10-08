@@ -1,0 +1,222 @@
+id: SC-SW-S5-06
+title: 登録ファイルの不正（bagit チェックサム・文字コード・JSON 構文）は EP2 で 400、1501
+preconditions: []
+steps:
+  - id: S-BAGIT
+    summary: bagit のチェックサム不一致は 400、1501
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=bagit-checksum-mismatch.zip
+        digest: SHA-256=bd5a7476a2ccbc57c39a76f9e5be7cfae57335bcd548f4cac0207f90150136b7
+        file: fixtures/generated/bagit-checksum-mismatch.zip
+        filename: bagit-checksum-mismatch.zip
+        packaging: http://purl.org/net/sword/3.0/package/SWORDBagIt
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1501: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?![\s\S]*(Traceback|Exception|UnicodeDecodeError|JSONDecodeError|BagValidationError))[\s\S]*$
+          at: body.error
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-ENCODING
+    summary: 文字コード不正（Shift_JIS）は 400、1501
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=bagit-non-utf8-metadata.zip
+        digest: SHA-256=d69dcf6bb18e768c3b6954ea1e74dfffe3c93313e1f16292359b776bc0943ede
+        file: fixtures/generated/bagit-non-utf8-metadata.zip
+        filename: bagit-non-utf8-metadata.zip
+        packaging: http://purl.org/net/sword/3.0/package/SWORDBagIt
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1501: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?![\s\S]*(Traceback|Exception|UnicodeDecodeError|JSONDecodeError|BagValidationError))[\s\S]*$
+          at: body.error
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-BAGIT
+    produces: {}
+    viewpoints: []
+  - id: S-JSON
+    summary: JSON-LD 構文不正は 400、1501（行・列のみを示す）
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=bagit-jsonld-syntax-error.zip
+        digest: SHA-256=dc9e8499df9748d539304f204d8d7bc65a51d94406da4e0a81dd00c722c03560
+        file: fixtures/generated/bagit-jsonld-syntax-error.zip
+        filename: bagit-jsonld-syntax-error.zip
+        packaging: http://purl.org/net/sword/3.0/package/SWORDBagIt
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1501: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: ^(?![\s\S]*(Traceback|Exception|UnicodeDecodeError|JSONDecodeError|BagValidationError))[\s\S]*$
+          at: body.error
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-ENCODING
+    produces: {}
+    viewpoints: []
+  - id: S-NOBAGIT
+    summary: （実測）bagit.txt なしは 1501 か 3201 のどちらかを記録する
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=bagit-no-bagit-txt.zip
+        digest: SHA-256=cbc4b71ce9bb969734be67aeb8c298fde79355b7e76df0a621fc657a321b5c50
+        file: fixtures/generated/bagit-no-bagit-txt.zip
+        filename: bagit-no-bagit-txt.zip
+        packaging: http://purl.org/net/sword/3.0/package/SWORDBagIt
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        alsoAccepts:
+          - 501
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_(1501|3201): "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: one_of
+          values:
+            - ContentMalformed
+            - NotImplemented
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-JSON
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1501
+    - "Item\\ check\\ error:"
+    - WEKO_SWORDSERVER_E_3201
+    - Internal\ Server\ Error
+    - BagValidationError
+    - BagError
+    - Internal Server Error
+evidenceWaivers: []
+tags:
+  - spec:S5-06
+  - tier:1
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-BD-42
+note: 手順 3 の構造欠落は期待値を断定しない（Q-6）ため 1501／3201 の許容範囲で判定し、実測値を結果に記録する。JSON 構文の『行・列のみ』はロケール訳に依存するため機械判定せず、内部例外名が連結されないことだけを見る。

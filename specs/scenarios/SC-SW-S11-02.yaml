@@ -1,0 +1,135 @@
+id: SC-SW-S11-02
+title: カタログのないロケールを指定しても英語にフォールバックし、プレースホルダが埋まる
+preconditions: []
+steps:
+  - id: S-13XX
+    summary: 13xx（Content-Disposition なし）をカタログのないロケール指定で送ると英語
+    action:
+      operation: OP-SWORD-POST
+      params:
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1303: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: BadRequest
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_\\d{4}: [A-Z][a-z]+ [\\s\\S]*$"
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_\\d{4}: (?![\\s\\S]*\\b[A-Z][A-Z0-9]+_[A-Z0-9_]+\\b)[\\s\\S]*$"
+          at: body.error
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-21XX
+    summary: 21xx（存在しない recid）をカタログのないロケール指定で送ると英語で recid が埋まる
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R9}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 404
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_2101: Item not found\\. \\(recid=\\d+\\)"
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: NotFound
+          at: body.@type
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_\\d{4}: [A-Z][a-z]+ [\\s\\S]*$"
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_\\d{4}: (?![\\s\\S]*\\b[A-Z][A-Z0-9]+_[A-Z0-9_]+\\b)[\\s\\S]*$"
+          at: body.error
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-13XX
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1303
+    - Cannot\ get\ filename\ by\ Content\-Disposition\.
+    - WEKO_SWORDSERVER_E_2101
+    - Item\ not\ found\.\ \(recid=
+evidenceWaivers: []
+tags:
+  - spec:S11-02
+  - tier:1
+  - automation:manual
+  - blocked:locale-method-U-11
+  - remark:U-04
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-BD-51
+note: ロケールの指定方法が未確定（U-11）で、plugin.yaml の操作にも Accept-Language 等のパラメータがない。方法が決まるまで手動。手順は S11-01 と同じで、指定したロケールを記録する。ここの steps はロケールを指定していないため、そのまま実行しても S11-01 と同じ意味にしかならない（生成しない）。

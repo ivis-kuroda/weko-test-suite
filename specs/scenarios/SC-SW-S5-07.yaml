@@ -1,0 +1,179 @@
+id: SC-SW-S5-07
+title: メタデータ不備は 1501、登録済みと同一のアイテムは EP2 で 1502（類似 1503 は設定が要るため除く）
+preconditions: []
+steps:
+  - id: S-EP2-NOTITLE
+    summary: メタデータ不備のファイルを EP2 に送ると 400、1501
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-no-title.zip
+        digest: SHA-256=b2b9efc19e6a2b5e6e377c10188d5ba1d6df9b58c052dd09dd6e5b82249d89f5
+        file: fixtures/generated/simplezip-no-title.zip
+        filename: simplezip-no-title.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1501: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-EP4-NOTITLE
+    summary: メタデータ不備のファイルを R1 への EP4 に送ると 400、1501
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=simplezip-no-title.zip
+        digest: SHA-256=b2b9efc19e6a2b5e6e377c10188d5ba1d6df9b58c052dd09dd6e5b82249d89f5
+        file: fixtures/generated/simplezip-no-title.zip
+        filename: simplezip-no-title.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1501: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: ContentMalformed
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-EP2-NOTITLE
+    produces: {}
+    viewpoints: []
+  - id: S-GEN-REGISTERED
+    summary: 登録済みアイテム（R1）の ID を持つファイルを作る
+    action:
+      operation: OP-FIXTURE-PUT-ITEM
+      params:
+        id: "{{env.SW_R1}}"
+        out: fixtures/generated/ath-{{run.id}}-registered.zip
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: 0
+          at: exitCode
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP4-NOTITLE
+    produces:
+      digest:
+        from: stdout
+        pattern: "\"digest\": \"(SHA-256=[0-9a-f]{64})\""
+    viewpoints: []
+  - id: S-EP2-REGISTERED
+    summary: 登録済みと同一のアイテムを EP2 に送ると 400、1502
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=ath-{{run.id}}-registered.zip
+        digest: "{{step.digest}}"
+        file: fixtures/generated/ath-{{run.id}}-registered.zip
+        filename: ath-{{run.id}}-registered.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 400
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: keys
+          value:
+            - "@context"
+            - "@type"
+            - timestamp
+            - error
+          at: body
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: "^WEKO_SWORDSERVER_E_1502: "
+          at: body.error
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: equals
+          value: BadRequest
+          at: body.@type
+        viewpoints: []
+    polarity: error
+    dependsOn:
+      - S-GEN-REGISTERED
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - WEKO_SWORDSERVER_E_1501
+    - "Item\\ check\\ error:"
+    - WEKO_SWORDSERVER_E_1502
+    - "This\\ item\\ is\\ already\\ registered:"
+evidenceWaivers: []
+tags:
+  - spec:S5-07
+  - tier:1
+  - blocked:duplicate-check-toggle
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-BD-75
+note: "類似アイテム（1503）は SwordClient の重複検知を有効にする設定変更が前提のため本シナリオに含めない（オーナー決定: 設定切替が要る部分は手動）。1503 は EP2 と EP4 で手動確認し、重複検知を有効にした設定を記録する。『登録済みと同一』は put-item --id <R1> のファイル（item ID 指定）で表現した（TIER1-STATUS の判断事項）。メタデータ不備には simplezip-no-title.zip（タイトルなしの CSV。seeds/build_fixtures.py に追加）を使う。"

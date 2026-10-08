@@ -1,0 +1,190 @@
+id: SC-SW-S12-01
+title: 正常系 EP1〜EP5 の応答・URL・メソッドが変わらない（EP1 のサービス文書を含む）
+preconditions: []
+steps:
+  - id: S-EP1
+    summary: EP1 は 200 でサービス文書を返す
+    action:
+      operation: OP-SWORD-GET-SERVICE-DOC
+      params:
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-CREATE-B
+    summary: EP5 の対象レコードを作る（R4 の代わり）
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: create_record
+        params: "{\"title\": \"ath-{{run.id}}-s12-01-b\", \"owner_email\": \"{{env.SW_USER_SYSADMIN}}\", \"item_type_id\": {{env.SW_ITEM_TYPE_ID}}}"
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: true
+          at: body.ok
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP1
+    produces:
+      recid_b: body.result.recid
+    viewpoints: []
+  - id: S-EP2
+    summary: EP2 は 201 でステータス文書を返し、@id が /sword/deposit/<recid> を指す
+    action:
+      operation: OP-SWORD-POST
+      params:
+        contentDisposition: attachment; filename=simplezip-normal.zip
+        digest: SHA-256=787a496989b82b049c4eb338baae2d8a35a197d544ade7a2aa10854755cbff74
+        file: fixtures/generated/simplezip-normal.zip
+        filename: simplezip-normal.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 201
+        viewpoints: []
+      - kind: result
+        assert:
+          kind: matches
+          pattern: /sword/deposit/\d+$
+          at: body.@id
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-CREATE-B
+    produces:
+      recid_new:
+        from: body.@id
+        pattern: /sword/deposit/(\d+)$
+    viewpoints: []
+  - id: S-EP3
+    summary: EP3 は 200（作成したレコード）
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{step.recid_new}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP2
+    produces: {}
+    viewpoints: []
+  - id: S-GEN
+    summary: EP4 用のファイルを作る
+    action:
+      operation: OP-FIXTURE-PUT-ITEM
+      params:
+        id: "{{step.recid_new}}"
+        out: fixtures/generated/ath-{{run.id}}-s12-01.zip
+    expect:
+      - kind: result
+        assert:
+          kind: equals
+          value: 0
+          at: exitCode
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP3
+    produces:
+      digest:
+        from: stdout
+        pattern: "\"digest\": \"(SHA-256=[0-9a-f]{64})\""
+    viewpoints: []
+  - id: S-EP4
+    summary: EP4 は 200（作成したレコードを更新）
+    action:
+      operation: OP-SWORD-PUT
+      params:
+        contentDisposition: attachment; filename=ath-{{run.id}}-s12-01.zip
+        digest: "{{step.digest}}"
+        file: fixtures/generated/ath-{{run.id}}-s12-01.zip
+        filename: ath-{{run.id}}-s12-01.zip
+        packaging: http://purl.org/net/sword/3.0/package/SimpleZip
+        recid: "{{step.recid_new}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-GEN
+    produces: {}
+    viewpoints: []
+  - id: S-EP5
+    summary: EP5 は 204（別のレコード。EP4 のロック 3 秒を避ける）
+    action:
+      operation: OP-SWORD-DELETE
+      params:
+        recid: "{{step.recid_b}}"
+        token: "{{env.SW_TOKEN_1}}"
+    expect:
+      - kind: http_status
+        status: 204
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-EP4
+    produces: {}
+    viewpoints: []
+cleanup:
+  - id: S-C-NEW
+    summary: EP2 が作ったレコードを片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_new}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-C-B
+    summary: EP5 の対象を片付ける
+    action:
+      operation: OP-HELPER
+      params:
+        cmd: delete_record
+        params: "{\"recid\": \"{{step.recid_b}}\"}"
+    expect: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore: []
+evidenceWaivers: []
+tags:
+  - spec:S12-01
+  - tier:1
+  - blocked:pre-change-baseline
+  - needs:real-metadata
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-CP-01
+note: ステータスと URL・メソッドだけを機械判定する。『改修前ベースラインと形式が同じ』の比較は S0-06 の記録が無く未実施。EP2 の成功には対象環境から書き出したメタデータが必要（fixtures/README.md）。

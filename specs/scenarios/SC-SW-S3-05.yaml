@@ -1,0 +1,87 @@
+id: SC-SW-S3-05
+title: GET 系（EP1・EP3）ではスコープ判定を追加していない（C-D・C-W のトークン②）
+preconditions: []
+steps:
+  - id: S-D-EP1
+    summary: C-D のトークン② で EP1 は 200
+    action:
+      operation: OP-SWORD-GET-SERVICE-DOC
+      params:
+        token: "{{env.SW_TOKEN_2}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn: []
+    produces: {}
+    viewpoints: []
+  - id: S-D-EP3
+    summary: C-D のトークン② で EP3（R1）は 200
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_2}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-D-EP1
+    produces: {}
+    viewpoints: []
+  - id: S-W-EP1
+    summary: C-W のトークン② で EP1 は 200
+    action:
+      operation: OP-SWORD-GET-SERVICE-DOC
+      params:
+        token: "{{env.SW_TOKEN_W2}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-D-EP3
+    produces: {}
+    viewpoints: []
+  - id: S-W-EP3
+    summary: C-W のトークン② で EP3（R1）は 200
+    action:
+      operation: OP-SWORD-GET-DEPOSIT
+      params:
+        recid: "{{env.SW_R1}}"
+        token: "{{env.SW_TOKEN_W2}}"
+    expect:
+      - kind: http_status
+        status: 200
+        viewpoints: []
+    polarity: nominal
+    dependsOn:
+      - S-W-EP1
+    produces: {}
+    viewpoints: []
+cleanup: []
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore: []
+evidenceWaivers: []
+tags:
+  - spec:S3-05
+  - tier:1
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+viewpoints:
+  - VP-SW-AU-32
+note: GET 系固有のエラー条件は U-12（要確認）。改修前と同じ結果（200）であることだけを見る。
