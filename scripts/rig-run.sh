@@ -5,7 +5,8 @@
 #   scripts/rig-run.sh --all                         # every generated test
 #   scripts/rig-run.sh --no-evidence ...             # skip evidence saving
 #   scripts/rig-run.sh --faithful-log ...            # the stub logs an ERROR line before every 4xx
-#                                                    # (what the code did before the fix, A-5): coded 4xx cases must then fail
+#                                                    # (what the code did before the fix, A-5): the cases must still pass (the
+#                                                    # specs tolerate it) and tools/a5_scan.py must list them as "on hold"
 #   scripts/rig-run.sh --exec <command...>           # run any command with the rig's environment
 #
 # The rig is NOT WEKO (docs/stub.md). A pass means "the generated test and the
@@ -124,6 +125,15 @@ if [ "$EVIDENCE_ON" = 1 ] && [ "${#EXEC[@]}" -eq 0 ]; then
     STATUS=1
   else
     echo "evidence ok: no raw token in $EVIDENCE, masked values present"
+  fi
+fi
+if [ "$FAITHFUL" = 1 ] && [ "$EVIDENCE_ON" = 1 ] && [ "${#EXEC[@]}" -eq 0 ]; then
+  # A-5 is tolerated, not hidden: the ERROR lines before 4xx must surface as "on hold" findings.
+  printf '\n== A-5 findings (on hold)\n'
+  uv run python tools/a5_scan.py "$EVIDENCE" --rows | tail -n 5 || true
+  if [ "$ALL" = 1 ] && [ -z "$(uv run python tools/a5_scan.py "$EVIDENCE" --rows)" ]; then
+    echo "FAIL: --faithful-log produced no A-5 finding (the ERROR lines are not surfacing)" >&2
+    STATUS=1
   fi
 fi
 printf '\nwork directory: %s (rig only: nothing here says anything about WEKO)\n' "$WORK"
