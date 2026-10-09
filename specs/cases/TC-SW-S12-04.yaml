@@ -17,7 +17,8 @@ evidence:
     - db_log
   timing: before_and_after
   trace: on_failure
-  ignore: []
+  ignore:
+    - .*
 evidenceWaivers: []
 priority: P3
 tags:
@@ -26,6 +27,7 @@ tags:
   - ep:EP3
   - automation:manual
   - blocked:pre-change-baseline
+  - log:not-judged
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

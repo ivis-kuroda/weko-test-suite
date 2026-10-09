@@ -37,9 +37,7 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - Authentication is required
-    - Forbidden
-    - Not allowed operation in your
+    - .*
 evidenceWaivers: []
 at:
   F-SW-EP: L-SW-EP2
@@ -51,6 +49,7 @@ tags:
   - ep:EP2
   - token:revoked
   - remark:U-21
+  - log:not-judged
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

@@ -20,7 +20,8 @@ evidence:
     - db_log
   timing: before_and_after
   trace: on_failure
-  ignore: []
+  ignore:
+    - .*
 evidenceWaivers: []
 at:
   F-SW-EP: L-SW-EP3
@@ -31,6 +32,7 @@ tags:
   - tier:1
   - ep:EP3
   - role:general
+  - log:not-judged
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

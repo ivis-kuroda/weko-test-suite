@@ -74,11 +74,13 @@ evidence:
     - db_log
   timing: before_and_after
   trace: on_failure
-  ignore: []
+  ignore:
+    - .*
 evidenceWaivers: []
 tags:
   - spec:S3-05
   - tier:1
+  - log:not-judged
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

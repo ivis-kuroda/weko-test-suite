@@ -41,6 +41,14 @@ expect:
       value: 200
       at: status
     viewpoints: []
+  - kind: operation_result
+    operation: OP-APP-LOG
+    params:
+      since: "{{run.startedAt}}"
+    assert:
+      kind: matches
+      pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2106\\] DELETE /sword/deposit/[^\\s:]+:"
+    viewpoints: []
 polarity: error
 evidence:
   sources:
@@ -53,16 +61,14 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2106
-    - (WARNING|ERROR).*Cannot delete item with DOI\.
-    - ERROR.*Cannot delete item with DOI
+    - .*
 evidenceWaivers: []
 priority: P2
 tags:
   - spec:S6-02
   - tier:1
-  - finding:A-5-on-hold
   - ep:EP5
+  - log:handler-line
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

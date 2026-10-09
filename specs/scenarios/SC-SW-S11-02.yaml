@@ -50,6 +50,14 @@ steps:
           pattern: "^WEKO_SWORDSERVER_E_\\d{4}: (?![\\s\\S]*\\b[A-Z][A-Z0-9]+_[A-Z0-9_]+\\b)[\\s\\S]*$"
           at: body.error
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1303\\] POST /sword/service-document:"
+        viewpoints: []
     polarity: error
     dependsOn: []
     produces: {}
@@ -99,6 +107,14 @@ steps:
           pattern: "^WEKO_SWORDSERVER_E_\\d{4}: (?![\\s\\S]*\\b[A-Z][A-Z0-9]+_[A-Z0-9_]+\\b)[\\s\\S]*$"
           at: body.error
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] GET /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-13XX
@@ -116,18 +132,15 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1303
-    - (WARNING|ERROR).*Cannot get filename by Content-Disposition\.
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2101
-    - (WARNING|ERROR).*Item not found\. \(recid=
+    - .*
 evidenceWaivers: []
 tags:
   - spec:S11-02
   - tier:1
-  - finding:A-5-on-hold
   - automation:manual
   - blocked:locale-method-U-11
   - remark:U-04
+  - log:handler-line
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

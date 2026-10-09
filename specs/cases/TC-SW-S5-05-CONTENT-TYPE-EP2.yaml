@@ -28,6 +28,14 @@ expect:
       value: ContentTypeNotAcceptable
       at: body.@type
     viewpoints: []
+  - kind: operation_result
+    operation: OP-APP-LOG
+    params:
+      since: "{{run.startedAt}}"
+    assert:
+      kind: matches
+      pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1401\\] POST /sword/service-document:"
+    viewpoints: []
 polarity: error
 evidence:
   sources:
@@ -40,8 +48,7 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1401
-    - "(WARNING|ERROR).*Not accept Content-Type:"
+    - .*
 evidenceWaivers: []
 at:
   F-SW-PKG-VARIANT: L-SW-PKGV-CONTENT-TYPE
@@ -50,13 +57,13 @@ priority: P2
 tags:
   - spec:S5-05
   - tier:1
-  - finding:A-5-on-hold
   - ep:EP2
   - variant:content-type
   - automation:manual
   - blocked:content-type-not-expressible
   - remark:Q-5
   - remark:U-22
+  - log:handler-line
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

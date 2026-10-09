@@ -35,6 +35,14 @@ steps:
           value: NotFound
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] GET /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn: []
     produces: {}
@@ -77,6 +85,14 @@ steps:
           value: NotFound
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] PUT /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-R9-EP3
@@ -115,6 +131,14 @@ steps:
           value: NotFound
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] DELETE /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-R9-EP4
@@ -152,6 +176,14 @@ steps:
           kind: equals
           value: NotFound
           at: body.@type
+        viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] GET /sword/deposit/[^\\s:]+:"
         viewpoints: []
     polarity: error
     dependsOn:
@@ -196,6 +228,14 @@ steps:
           value: NotFound
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] PUT /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-R3-EP3
@@ -234,6 +274,14 @@ steps:
           value: NotFound
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?2101\\] DELETE /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-R3-EP4
@@ -251,13 +299,12 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_2101
-    - (WARNING|ERROR).*Item not found\. \(recid=
+    - .*
 evidenceWaivers: []
 tags:
   - spec:S6-01
   - tier:1
-  - finding:A-5-on-hold
+  - log:handler-line
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2

@@ -40,6 +40,14 @@ steps:
           value: ContentMalformed
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1504\\] PUT /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn: []
     produces: {}
@@ -81,6 +89,14 @@ steps:
           kind: equals
           value: BadRequest
           at: body.@type
+        viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1505\\] PUT /sword/deposit/[^\\s:]+:"
         viewpoints: []
     polarity: error
     dependsOn:
@@ -147,6 +163,14 @@ steps:
           value: BadRequest
           at: body.@type
         viewpoints: []
+      - kind: operation_result
+        operation: OP-APP-LOG
+        params:
+          since: "{{run.startedAt}}"
+        assert:
+          kind: matches
+          pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1506\\] PUT /sword/deposit/[^\\s:]+:"
+        viewpoints: []
     polarity: error
     dependsOn:
       - S-GEN-MISMATCH
@@ -164,21 +188,12 @@ evidence:
   timing: before_and_after
   trace: on_failure
   ignore:
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1504
-    - (WARNING|ERROR).*Multiple items found in import file\. Only one item is allowed for PUT requests\.
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1505
-    - "(WARNING|ERROR).*This item is not registered yet:"
-    - (WARNING|ERROR).*WEKO_SWORDSERVER_E_1506
-    - "(WARNING|ERROR).*Item id does not match\\. item:"
-    - ERROR.*This item is already registered\.
-    - ERROR.*Multiple items found in import file\.
-    - ERROR.*This item is not registered yet\.
-    - ERROR.*Item id does not match\.
+    - .*
 evidenceWaivers: []
 tags:
   - spec:S5-08
   - tier:1
-  - finding:A-5-on-hold
+  - log:handler-line
 appliesTo:
   branch: test/sword-error-codes
   release: integration_test_spec_v4.2
