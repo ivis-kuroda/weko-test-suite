@@ -1,8 +1,11 @@
 id: VP-SW-BD-60
 title: 4xx は WARNING
-rationale: "前提：400／404／409／412／413／415／429 のうち複数。操作：各エラーを発生させログのレベルを確認する。期待結果：ハンドラ行（`[code] METHOD path: message` 書式）がすべて WARNING。INFO で記録されない。かつ 4xx 応答のログに ERROR 行がない（同一リクエストに ERROR 行が併存すれば不合格。送出前の `current_app.logger.error` が出る場合は「実装不具合候補」として記録。U-20）。"
+rationale: "前提：400／404／409／412／413／415／429 のうち複数。操作：各エラーを発生させログのレベルを確認する。期待結果：ハンドラ行（`[code] METHOD path: message` 書式。`handle_weko_swordserver_exception`、429 は `handle_ratelimit`）が出ていて、そのレベルがすべて WARNING。INFO で記録されない。判定はこのハンドラ行の有無とレベルだけで行い、同一リクエストやアプリケーション全体の ERROR 行・スタックトレース（送出前の `current_app.logger.error` や改修範囲外の既存ログを含む）の有無では合否を決めない（WEKO の内部は重要度に関わらず ERROR・トレースを出すため）。範囲外の ERROR 行・トレースは証跡のログ差分に残し、結果欄の備考に記録する（送出前の ERROR は「実装不具合候補」A-5。U-20）。"
 source:
   - kind: design
     ref: basic_design.md v1.4 §5.4
+  - kind: other
+    ref: 観点表の本文を差し替え済み（tools/viewpoint_overrides.json。docs/VIEWPOINT-OVERRIDES.md）
+    note: "差し替え（expected）。理由: オーナー決定 2026-10-09: アプリケーションログは「ERROR 行がない」を否定条件にしない。WEKO 内部は改修範囲外でも重要度に関わらずエラーログ・スタックトレースを出すため、範囲外のノイズが判定に入り込む。期待するハンドラ行が正しい場所から正しいレベルで出ていることを肯定条件にする。 原文: ハンドラ行（`[code] METHOD path: message` 書式）がすべて WARNING。INFO で記録されない。かつ 4xx 応答のログに ERROR 行がない（同一リクエストに ERROR 行が併存すれば不合格。送出前の `current_app.logger.error` が出る場合は「実装不具合候補」として記録。U-20）"
 risk: low
 parents: []
