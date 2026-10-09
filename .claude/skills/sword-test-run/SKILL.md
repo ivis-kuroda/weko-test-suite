@@ -112,12 +112,13 @@ every test creates uniquely named data (`ath-<run.id>-...`) and cleans up after 
 
 ## Not runnable cases
 
-`automation.status: not_runnable` (hub) marks a case that cannot be run without modifying WEKO's source. The hub refuses to
-generate it; it is not a failure and is not run. Current ones: `TC-SW-S15-07` (3107) and `TC-SW-S15-15` (1411, mock
+`automation.status: not_runnable` (hub) marks a case that cannot be reproduced without modifying WEKO's source (never done: reproducibility/idempotence). The hub refuses to
+generate it; it is not a failure and is not run. Current ones (provable from code): `TC-SW-S15-07` (3107) and `TC-SW-S15-15` (1411, mock
 M14); reasons, dates and check methods are in the YAML (`automation.reason/checkedAt/checkedBy`) and in
 `docs/TIER1-STATUS.md`. Report them as 実施不可 with that text (spec 0.6.3). Never mark a case `not_runnable` when a DB,
-data or configuration route exists (those are manual/Tier 2); if a spike (e.g. M14 with the owner's source-change
-approval) works, set the status back to `manual`.
+data or configuration route exists (those are manual/Tier 2). Policy: WEKO source is never modified; a local spike decides
+per mock (`weko-fault-injection`), and a failing spike means `not_runnable` via a YAML-only commit on `spec-draft/sword-error-codes`
+(then regenerate/remove tests on the feature branch; `hub.lock` stays compatible).
 
 ## Tier 2 (not automated; document, do not run unattended)
 

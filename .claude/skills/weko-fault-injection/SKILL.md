@@ -1,14 +1,15 @@
 ---
 name: weko-fault-injection
-description: Recreate the spec's mocks M1-M15 (S0-09, S15) on a real local WEKO by rewriting database, data or environment through the helpers inject_fault, restore_fault, list_faults, set_client_field and orphan_record, with the confidence of each recipe, restore and fault.none verification, spike order, and when to stop and ask the owner to approve a source modification. Use when preparing or running S14/S15, a spike of a mock, or when a fault will not restore. Not for stopping containers (that is S14, see sword-test-run).
+description: Recreate the spec's mocks M1-M15 (S0-09, S15) on a real local WEKO by rewriting database, data or environment through the helpers inject_fault, restore_fault, list_faults, set_client_field and orphan_record, with the confidence of each recipe, restore and fault.none verification, spike order, and the rule that a mock which cannot be reproduced without touching WEKO source is marked not_runnable (never patched). Use when preparing or running S14/S15, a spike of a mock, or when a fault will not restore. Not for stopping containers (that is S14, see sword-test-run).
 ---
 
 # Fault injection by data, not by code
 
-Owner decision (e): rewrite DB / data / environment first through the helpers; modify WEKO source
-only as a last resort and **only with the owner's explicit approval**. The helpers never touch WEKO code.
-Every recipe below is a hypothesis: nothing has run on a real WEKO. A spike per mock decides whether
-it works; a mock that cannot be reproduced by data is reported to the owner, never patched silently.
+Owner decision (2026-10-09): **WEKO source is never modified** (a run must be reproducible and idempotent; the client also
+treats a source change as a last resort). Mocks are recreated only by rewriting DB / data / configuration / environment
+through the helpers, which never touch WEKO code. Every recipe below is a hypothesis: nothing has run on a real WEKO.
+A local spike decides per mock. A mock whose spike fails (or that is provably unreachable from the code) is marked
+`automation.status: not_runnable` (reason, checkedAt, checkedBy) and reported as 実施不可; see "When a spike fails".
 
 ## Mechanics
 
@@ -32,20 +33,20 @@ Confidence: H = likely works, M = plausible, L = doubtful. "Spike" = first thing
 
 | Mock | Needed condition (spec S0-09) | Recipe (helpers) | Conf. | Notes / spike |
 |---|---|---|---|---|
-| M1 | non-connection DB error (`ProgrammingError`/`IntegrityError`) on EP3 `get_record_permalink` read path | `rls_raise_on_row` on `pids` (or `records`) for the target recid, sqlstate 42xxx (`ProgrammingError`) | L | Needs a DB role without superuser/BYPASSRLS; else `RlsBypassed`. A SELECT cannot fire a trigger. If bypassed: owner decision |
-| M2 | Direct failure with `Unexpected error: <type>` marker (non-SQLAlchemy exception inside `import_items_to_system`) | none dedicated; try `corrupt_mapping_json` (mode `drop_key`/`json_string`) so the import raises KeyError/TypeError | L | Spike after M7; the marker text must match. Else source change |
+| M1 | non-connection DB error (`ProgrammingError`/`IntegrityError`) on EP3 `get_record_permalink` read path | `rls_raise_on_row` on `pids` (or `records`) for the target recid, sqlstate 42xxx (`ProgrammingError`) | L | Needs a DB role without superuser/BYPASSRLS; else `RlsBypassed`. A SELECT cannot fire a trigger. If bypassed and no substitute: `not_runnable` |
+| M2 | Direct failure with `Unexpected error: <type>` marker (non-SQLAlchemy exception inside `import_items_to_system`) | none dedicated; try `corrupt_mapping_json` (mode `drop_key`/`json_string`) so the import raises KeyError/TypeError | L | Spike after M7; the marker text must match. Else `not_runnable` |
 | M3 | EP2 `import_items_to_system` raises a non-connection `SQLAlchemyError` (`sqlalchemy error: <type>`) | `trigger_raise` insert on `records` (or `items`/`pids`) sqlstate 23505/23503, or `check_violation_new_rows` (23514) with `row_condition` on the new title | M | Pick a row condition so only the test's item fails. Check the wrapped marker in the response |
 | M4 | same as M3 on EP4 (update) | `trigger_raise` event `update` on `records` with `row_condition` `{column:id|json..., ref:NEW}` for R1's uuid | M | |
 | M5 | unknown exception during delete (EP5) | `trigger_raise` event `delete` or `update` on `pids`/`records` (sqlstate 23xxx/42xxx) | M | `soft_delete` updates the PID: update on `pids` for the recid |
 | M6 | `WekoWorkflowException` during delete | `break_workflow_flow` (`mode: delete_flow_actions` on the C-W workflow; also `flow_status`, `mark_deleted`) | M/L | Whether the delete flow code raises that exception type is UNVERIFIED |
 | M7 | exception in `check_jsonld_import_items` (e.g. mapping undefined) | `corrupt_mapping_json` (`mapping_id` 30001) modes `empty_object`/`null_json`/`drop_key` | M | |
-| M8 | OBO target lookup: `OperationalError` only on the user query | `rls_raise_on_row` on `users`, `column:email`, sqlstate 08006, `command:"SELECT"` | L | Token validation also reads users (different row - condition on the OBO target's email only). RLS bypass -> owner |
+| M8 | OBO target lookup: `OperationalError` only on the user query | `rls_raise_on_row` on `users`, `column:email`, sqlstate 08006, `command:"SELECT"` | L | Token validation also reads users (different row - condition on the OBO target's email only). RLS bypass and no trigger substitute -> `not_runnable` |
 | M9 | response serialization validation error | `corrupt_record_json` on the record (`mode: drop_key`, `key` of a required field, or `json_array`) | M | Make EP3 the probe first |
 | M10 | OBO lookup: non-connection DB error (`ProgrammingError`) | as M8 with sqlstate 42P01 / 42703 | L | |
 | M11 | Workflow update: activity cannot be created (before creation) | `break_workflow_flow` `mode: flow_status` (or `delete_flow_actions`) on the C-W workflow; or `trigger_raise` insert on `activities` | M/L | Must leave no activity/draft |
 | M12 | invalid `registration_type` in DB (EP4 3103, EP5 3102) | `set_client_field {client_id, field:"registration_type_id", value:99}` (restore with the previous value it returns) | H | Not a fault-kind: restore by hand; the value is returned in `previous` |
-| M13 | dependency-type exception during delete (DB `OperationalError`, Redis/ES `ConnectionError`) | DB: `trigger_raise` sqlstate `08006` on the delete path. Redis/ES: none | M (DB) / L | 08006 through pgpool/SQLAlchemy is UNVERIFIED. Redis/ES ConnectionError inside delete only: source change (container stop = S14, different path, token lookup first for DB) |
-| M14 | `check_import_file_format` returns an unknown format | none (pure Python function, `views` module attribute) | L | Unreachable by data. Source modification/monkeypatch: **ask the owner** |
+| M13 | dependency-type exception during delete (DB `OperationalError`, Redis/ES `ConnectionError`) | DB: `trigger_raise` sqlstate `08006` on the delete path. Redis/ES: none | M (DB) / L | 08006 through pgpool/SQLAlchemy is UNVERIFIED. Redis/ES ConnectionError inside delete only: no data route -> `not_runnable` for that part (container stop = S14, different path, token lookup first for DB) |
+| M14 | `check_import_file_format` returns an unknown format | none (pure Python function, `views` module attribute) | L | Unreachable by data (code-read proof) -> already `not_runnable` (TC-SW-S15-15) |
 | M15 | delete-side `Resolver.resolve` returns `(pid, None)` while EP5's first existence check (2101) passes | `orphan_record {recid}` (record rows removed, PID kept; `{"restore": <backup>}` to undo) | M | The 2101 check uses another Resolver and may also fail (-> 2101 not 2102). Check; Q-10 |
 
 ## Verify, per mock (always in this order)
@@ -63,8 +64,7 @@ an `operation_result` over `OP-APP-LOG` with `Variant(code, status)`; 500/501/50
 (3108-3110 via `handle_dependency_error`, EP3/EP5 and the authentication stage) also needs `trace=True`
 (the stack trace attached to the handler line, spec C-5xx-3). 3108-3110 reached through the fixed value in the EP2/EP4 import
 stage get no trace requirement (F-08): record whether a trace is present, do not assert it. The ERROR lines and traces WEKO
-writes on its own are never judged. If a spike fails and the owner declines the source change, mark the case `not_runnable`
-with reason, checkedAt and checkedBy in the YAML (spec-draft) instead of leaving it manual.
+writes on its own are never judged. If a spike fails, mark the case `not_runnable` (see below) instead of leaving it manual.
 
 If a step fails and a fault stays, `restore_fault {"kind":"all"}` sweeps `ath_fault_*` triggers, constraints, policies
 and functions; if even that fails, inspect `pg_trigger`, `pg_policy`, `pg_proc` for `ath_fault_%` in the DB container and report.
@@ -74,14 +74,24 @@ and functions; if even that fails, inspect `pg_trigger`, `pg_policy`, `pg_proc` 
 M12 -> M15 -> M3/M4 -> M5 -> M7 -> M9 -> M11/M6 -> M13 (DB part) -> M2 -> M1/M8/M10 (RLS; first
 `ping` -> `db_user`, then check `rolsuper`/`rolbypassrls`) -> M14.
 
-## Escalate to the owner (stop, do not patch) when
+## When a spike fails (no source change, ever)
 
-- the DB role bypasses RLS (M1/M8/M10) and no trigger can substitute;
+Mark the case `automation.status: not_runnable` only when the spike on the local WEKO failed (or the code read proves the
+condition unreachable) for these reasons:
+
+- the DB role bypasses RLS (M1/M8/M10) and no `trigger_raise` substitute reproduces the condition;
 - the mock needs a Python-level exception inside WEKO (M2, M13 Redis/ES, M14, sometimes M6);
-- a recipe yields a different code than the spec (maybe a spec defect: report, do not adapt expectations);
-- injection risks the shared state (e.g. affects other users' rows).
-A source change proposal states: file and function, the exact minimal patch (as a diff in a scratch copy, never committed to
-`weko`), how it is removed, and which M-id it serves. The owner approves it per mock.
+- the recipe cannot be restored cleanly, or injection risks shared state (other users' rows): stop, restore, report.
+
+A recipe that yields a different code than the spec is not a reason for `not_runnable`: report it (maybe a spec defect) and do
+not adapt expectations.
+
+How to record: edit the case YAML **only on branch `spec-draft/sword-error-codes`** (YAML-only commit) with
+`automation: {status: not_runnable, reason: <why, with the spike result>, checkedAt: <date>, checkedBy: <who>}`; then
+`SPECS_DIR=<spec-draft worktree>/specs scripts/check.sh`, delete the now-refused generated test on the feature branch
+(`tests/generated/<file>`) and keep `hub.lock` compatible (do not change the hub); push both branches after
+`git fetch origin && git rebase origin/<branch>`. Update `docs/TIER1-STATUS.md` (実施不可 table) on the feature branch.
+Never patch or monkeypatch WEKO, never ask for approval to do so.
 
 ## Pitfalls
 

@@ -87,7 +87,7 @@ in step 8; record each result in `HANDOFF.md` or the run notes.
 8. **First-run verification checklist** (helpers; run in this order, each is
    `echo '<json>' | docker exec -i "$WEKO_WEB_CONTAINER" python /opt/ath-helpers/run.py <cmd>`). Expected result in brackets; on a mismatch stop and triage as a *test defect* in the helper, do not work around it.
    1. `list` -> about 19 names including `inject_fault`. `python --version` is 3.6.
-   2. `ping` -> `ok:true`, `db_ok:true`, `db_user`. Note `db_user`: superuser/BYPASSRLS disables the RLS recipes (M1/M8/M10).
+   2. `ping` -> `ok:true`, `db_ok:true`, `db_user`. Note `db_user`: superuser/BYPASSRLS disables the RLS recipes (M1/M8/M10; if no substitute works those mocks become `not_runnable`, never a source change).
    3. `baseline` -> 4 roles, 5 users, item types 30001/30002, mappings, flow 1, workflows 1/2, location `local`.
    4. `create_user` twice with a scratch email: first `created:true`; second `created:false`, `roles_added:[]`. Then log in as `user@example.org` / `uspass123` in the UI over https (`confirmed_at` empty -> login may fail; `create_user` fills it, with `previous`).
    5. `create_token` with `scopes:[]` and `["deposit:write"]`; `service-document` with the bearer returns 200. Check the `WEKO_TEST_TOKEN_` prefix is accepted (if 401, retry with `token_prefix:""`: JWT validation).

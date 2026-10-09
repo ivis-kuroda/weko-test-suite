@@ -122,7 +122,7 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
 
 ## 障害レシピ
 
-オーナーの方針: **バックエンド障害は DB や環境の書き換えで再現し、ソースコードの改変は最後の手段。**
+オーナーの方針（2026-10-09）: **バックエンド障害は DB・データ・設定・環境の書き換えだけで再現し、ソースコードは改変しない**（再現性・冪等性）。再現できないものは `not_runnable`。
 このヘルパーは WEKO のコードに一切触れない。作るオブジェクトはすべて `ath_fault_<n>_*`
 という名前で、状態は `ath_fault_state` / `ath_fault_backup` に保存する。
 どちらも障害が 0 件になると `DROP` されるので、`list_faults == []` で「何も残っていない」を確認できる。
@@ -147,7 +147,7 @@ docker exec -i <web> python /opt/ath-helpers/run.py list
 - **RLS は DB ロールが superuser/BYPASSRLS だと無効。** そのときは `RlsBypassed` エラーで拒否する
   （`allow_bypass: true` で強制）。WEKO の既定構成（`invenio` ユーザー）がどちらか不明。
   回避できない場合は M8/M10 を `trigger_raise`（`event: update` など）か、ユーザー行を読む
-  経路の別手段で再現する必要があり、**オーナー判断事項**。
+  経路の別手段で再現する。できなければ `not_runnable`（ソース改変はしない）。
 - pgpool 経由の DDL が通るか、SQLSTATE 08006 が SQLAlchemy/pgpool でどう扱われるか（接続断扱いで
   リトライされる等）は未検証。
 - 障害はトランザクションごとに作る。途中で失敗すれば `ROLLBACK` され何も残らない。

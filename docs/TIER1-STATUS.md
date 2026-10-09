@@ -84,14 +84,14 @@ WEKO の内部は、重要でない状況も範囲外の状況も区別せず、
 
 ## 実施不可（not_runnable）
 
-hub の `automation.status: not_runnable`（reason／checkedAt／checkedBy）。**ソース変更なしでは実施できないことが、
-コードの読み取りで確かめられたものだけ**に付けた。オーナーの確認待ち（承認が出てソース変更でやる場合は `manual` に戻す）。
+hub の `automation.status: not_runnable`（reason／checkedAt／checkedBy）。**ソースは改変しない**（再現性・冪等性。発注元も最終手段）ので、DB／データ／設定／環境で再現できないことが、
+コードの読み取りで確かめられたものだけに付けた。ローカルのスパイクが成立しないモックも同様に `not_runnable` にする（spec-draft への YAML のみのコミット）。
 `ath-generate-test` は生成を拒否する。確認はすべて weko `test/sword-error-codes`（daf15d6f）の読み取り専用のコードパス確認。
 
 | ケース | 内容 | 根拠 |
 |---|---|---|
 | `TC-SW-S15-07` | Workflow 経路でアクティビティが取れず 501（3107） | `_get_status_workflow_document` が activity_id 空で 3107 を送出するが、空になるのは `import_items_to_activity` が URL なしで返すとき（error も非空）だけで、`post_service_document`／`put_object` は error があれば先に 2401／3106 系を送出する。入力・DB・設定では到達できない。仕様書 v4.2 も実施不可でクローズ |
-| `TC-SW-S15-15` | 形式判定が未知を返し 415（1411、M14） | `check_import_items` の else 節のみ。`check_import_file_format` は JSON／XML／TSV/CSV を返すか 1404〜1408 を送出するので到達不能（防御分岐）。M14 は動作中プロセスの関数の差し替えで、ソース変更（差し替え版での再起動）が要る |
+| `TC-SW-S15-15` | 形式判定が未知を返し 415（1411、M14） | `check_import_items` の else 節のみ。`check_import_file_format` は JSON／XML／TSV/CSV を返すか 1404〜1408 を送出するので到達不能（防御分岐）。M14 は動作中プロセスの関数の差し替えが要り、ソースを改変しない方針では再現できない |
 
 **付けなかったもの（確認したが、実施不可と言えない）**:
 
@@ -102,7 +102,7 @@ hub の `automation.status: not_runnable`（reason／checkedAt／checkedBy）。
 - **1401（Content-Type 不可）**: リクエストとファイルパートの両方の Content-Type が許可外のときに出る。multipart ではリクエストの
   Content-Type が許可外になるので、ファイルパートの Content-Type を許可外にすれば到達する見込み。hub の http 操作で
   パートの Content-Type を指定できるかの問題（`blocked:content-type-not-expressible`、Q-5）で、実施不可ではない。
-- M14 以外のモック（M1〜M13、M15）: DB／データ／環境の操作で作れる見込みで、ローカルのスパイクで成否を確かめる（HANDOFF）。
+- M14 以外のモック（M1〜M13、M15）: DB／データ／環境の操作で作れる見込みで、ローカルのスパイクで成否を決める。成立しなければ `not_runnable`（HANDOFF の決定ログ）。
 
 ## 判断事項（オーナー確認）
 
@@ -162,5 +162,5 @@ hub の `automation.status: not_runnable`（reason／checkedAt／checkedBy）。
 3. 設定切替を伴うケース（重複検知、XML、上限サイズ、ロケール）を自動化するか。plugin に設定変更の操作を足す必要がある。
 4. 実メタデータ（対象環境から書き出した CSV）の用意。それまで S3-04、S8-02、S12-01 は実 WEKO で通らない可能性がある。
 5. マトリクスの `strategy`（現在 `full`）。
-6. 実施不可（`TC-SW-S15-07`、`TC-SW-S15-15`）の確認。ソース変更の承認が出るなら `manual` に戻す。1403／1408 は設定切替で到達できる
+6. 実施不可（`TC-SW-S15-07`、`TC-SW-S15-15`）の確認（ソース改変はしない方針）。1403／1408 は設定切替で到達できる
    ので実施不可にしていない（確認の根拠は上の表）。
