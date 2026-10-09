@@ -1,0 +1,71 @@
+id: TC-SW-S15-15
+summary: メタデータ形式の判定が未知の形式を返すと 415、1411（実施不可。防御分岐、M14）
+baseline: BL-SW-POST-DIRECT
+overrides: []
+expect:
+  - kind: http_status
+    status: 415
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: keys
+      value:
+        - "@context"
+        - "@type"
+        - timestamp
+        - error
+      at: body
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: matches
+      pattern: "^WEKO_SWORDSERVER_E_1411: "
+      at: body.error
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      value: MetadataFormatNotAcceptable
+      at: body.@type
+    viewpoints: []
+  - kind: operation_result
+    operation: OP-APP-LOG
+    params:
+      since: "{{run.startedAt}}"
+    assert:
+      kind: matches
+      pattern: "\\bWARNING\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?1411\\] POST /sword/service-document:"
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - .*
+evidenceWaivers: []
+priority: P3
+tags:
+  - spec:S15-15
+  - tier:1
+  - ep:EP2
+  - finding:not-runnable
+  - origin:mock-M14
+  - log:handler-line
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: not_runnable
+  reason: 1411 は check_import_items の file_format が JSON／XML／TSV/CSV のいずれでもないときの else 節にしかなく、check_import_file_format が JSON／XML／TSV/CSV を返すか 1404〜1408 を送出するため、要求・DB・設定のいずれでも到達できない（防御分岐）。仕様書のモック M14 は check_import_file_format を差し替えるもので、動作中のサーバープロセスの Python 関数を差し替えるには WEKO のソース変更（または差し替えた版での再起動）が要る。
+  checkedAt: 2026-10-09
+  checkedBy: "コードパス確認（読み取り専用）。weko test/sword-error-codes daf15d6f: modules/weko-swordserver/weko_swordserver/utils.py の check_import_file_format（戻り値は JSON、XML、TSV/CSV のみ。他は 1404〜1408 の送出）と check_import_items（file_format の else 節が 1411）、views.py の post_service_document・put_object（file_format は check_import_file_format の戻り値のみ）。helpers の inject_fault に M14 のレシピなし（docs/helpers.md）。確認者: Claude（AI）。オーナーの確認待ち（モックのスパイクでソース変更の承認が出た場合は manual へ戻す）。"
+viewpoints:
+  - VP-SW-EG-18
+note: S15-15（観点 EG-18、モック M14）。期待値は設計どおり。ログの期待（WARNING、ハンドラ行 [1411]）も設計上のもの。DB・設定の経路はない。オーナーがソース変更（差し替え）を承認した場合だけ実行できるため、承認後に automation.status を manual に戻して手順を決める。

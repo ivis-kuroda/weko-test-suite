@@ -1,0 +1,74 @@
+id: TC-SW-S15-07
+summary: Workflow 経路でアクティビティが取得できないと 501、3107（実施不可。設計意図の記録）
+baseline: BL-SW-POST-DIRECT
+overrides:
+  - path: action.params.token
+    op: set
+    value: "{{env.SW_TOKEN_W}}"
+expect:
+  - kind: http_status
+    status: 501
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: keys
+      value:
+        - "@context"
+        - "@type"
+        - timestamp
+        - error
+      at: body
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: matches
+      pattern: "^WEKO_SWORDSERVER_E_3107: "
+      at: body.error
+    viewpoints: []
+  - kind: result
+    assert:
+      kind: equals
+      value: NotImplemented
+      at: body.@type
+    viewpoints: []
+  - kind: operation_result
+    operation: OP-APP-LOG
+    params:
+      since: "{{run.startedAt}}"
+    assert:
+      kind: matches
+      pattern: "\\bERROR\\b[^\\n]*\\[(?:WEKO_SWORDSERVER_E_)?3107\\] POST /sword/service-document:"
+    viewpoints: []
+polarity: error
+evidence:
+  sources:
+    - screenshot
+    - browser_console
+    - browser_network
+    - db_records
+    - app_log
+    - db_log
+  timing: before_and_after
+  trace: on_failure
+  ignore:
+    - .*
+evidenceWaivers: []
+priority: P3
+tags:
+  - spec:S15-07
+  - tier:1
+  - ep:EP2
+  - finding:not-runnable
+  - origin:spec-closed
+  - log:handler-line
+appliesTo:
+  branch: test/sword-error-codes
+  release: integration_test_spec_v4.2
+automation:
+  status: not_runnable
+  reason: 3107 は _get_status_workflow_document の activity_id が空のときだけ送出される。activity_id が空になるのは import_items_to_activity が空の URL を返す場合（WekoWorkflowException でアクティビティが作られなかったとき。error も空でない）だけで、post_service_document は error があれば warns 経由で 2401 を、put_object は UPDATE_PENDING_COMPLETION か UPDATE_FAILURE を、_get_status_workflow_document を呼ぶ前に必ず送出する。要求・DB・設定のどれでも activity_id が空のまま到達できず、実行するには WEKO のソース変更が要る。仕様書 v4.2 S15-07 も実施不可でクローズしている（EP3 では再現できない）。
+  checkedAt: 2026-10-09
+  checkedBy: "コードパス確認（読み取り専用）。weko test/sword-error-codes daf15d6f: modules/weko-swordserver/weko_swordserver/views.py の post_service_document（process_item 後の warns 分岐と _get_status_workflow_document 呼び出し）と put_object（error と url の分岐）、modules/weko-search-ui/weko_search_ui/utils.py の import_items_to_activity、modules/weko-workflow/weko_workflow/headless/activity.py の detail。仕様書 v4.2 S15-07（0.6.3）。確認者: Claude（AI）。オーナーの確認待ち。"
+viewpoints:
+  - VP-SW-BD-20
+note: "S15-07: 仕様書は実施不可でクローズ（0.5）。自動化せず、理由・確認日時・確認方法を hub の automation に残すためのエンティティ。期待値（501、NotImplemented、3107、ログは ERROR のハンドラ行）は設計上のもので、検証しない。"
