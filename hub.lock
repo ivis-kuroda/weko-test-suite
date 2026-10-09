@@ -3,4 +3,4 @@
 # deliberately (and re-run scripts/check.sh) when the hub gains something
 # this repository needs.
 repo=https://github.com/ivis-kuroda/agentic-test-hub.git
-sha=78dd13a81b67b9cefd056b43aa0bcd89fee9887b
+sha=d785da1ea81789e5b45b763be630e24b0ad35012
