@@ -130,6 +130,8 @@ uv run python seeds/bootstrap.py run      # .env.local を書く（権限 0600�
 
 `SESSION_COOKIE_SECURE = True` のため、ブラウザでの操作（UI ケース）を `http://127.0.0.1:5001` で行うと
 セッション Cookie が保存されない可能性がある（**未検証**）。UI ケースは https の経路を使う。
+自己署名証明書は、環境変数 **`ATH_BROWSER_IGNORE_HTTPS_ERRORS=1`** で受け入れる（オーナー決定 2026-10-09。hub の
+Python 版 Playwright ドライバが読む。生成テストの編集も NSS db への登録も要らない。`.env.example` に例がある）。
 Bearer トークンでの API 呼び出しには影響しない。プロキシ環境では `NO_PROXY=127.0.0.1` を設定する。
 
 ## 5. 危険事項

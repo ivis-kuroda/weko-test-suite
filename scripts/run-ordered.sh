@@ -75,6 +75,6 @@ for i in "${!FILES[@]}"; do
 done
 echo
 echo "files run: ${#FILES[@]}, files with a failure: $FAILED"
-echo "A-5 findings (on hold):"
-uv run python tools/a5_scan.py "$ATH_EVIDENCE_DIR" --rows || true
+echo "Out-of-scope log remarks (never part of the verdict; docs/LOG-JUDGEMENT.md):"
+uv run python tools/log_remarks.py "$ATH_EVIDENCE_DIR" --rows || true
 [ "$FAILED" = 0 ]

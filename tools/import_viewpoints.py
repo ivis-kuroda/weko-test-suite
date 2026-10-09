@@ -31,6 +31,21 @@ Mapping onto the hub viewpoint schema (``packages/core/src/schema/viewpoint.ts``
                policy; otherwise ``medium``. A proposal for the reviewer, not a
                judgement.
 ``parents``    always empty.
+
+Overrides
+---------
+
+The workbook is the owner's; this tool never edits it, and generated files are never
+edited by hand. When the owner decides that a cell must read differently before the
+workbook itself is changed, the decision goes into ``tools/viewpoint_overrides.json``
+(one object per replaced cell text: ``id``, ``field`` = ``precondition`` | ``operation`` |
+``expected``, ``from`` = the exact original text, ``to`` = the replacement, ``reason``).
+The importer replaces ``from`` by ``to`` before building the viewpoint, and keeps the
+decision visible in the generated YAML as an extra ``source`` entry of kind ``other``
+whose ``note`` holds the reason and the original text. ``from`` not being found is an
+error unless ``to`` is already there (the workbook was updated: the override is reported
+as obsolete and can be removed), so a stale override cannot go unnoticed.
+``docs/VIEWPOINT-OVERRIDES.md`` lists them for the owner to apply to the workbook.
 """
 
 from __future__ import annotations
@@ -69,6 +84,10 @@ KNOWN_ABSENT_VIEWPOINTS = {"UI-10": "観点表 v4.2 で除外（欠番）"}
 
 CASE_ID = re.compile(r"S\d+-\d+")
 VIEWPOINT_ID = re.compile(r"^[A-Z]{2}-\d+$")
+
+
+OVERRIDE_FIELDS = ("precondition", "operation", "expected")
+DEFAULT_OVERRIDES = Path(__file__).resolve().parent / "viewpoint_overrides.json"
 
 
 class ImportError_(Exception):
@@ -244,6 +263,84 @@ def read_spec_cases(path: Path) -> tuple[list[str], dict[str, list[str]]]:
     return cases, table
 
 
+# --------------------------------------------------------------------------- overrides
+
+
+@dataclass(frozen=True)
+class Override:
+    """One owner-decided replacement of a workbook cell text."""
+
+    id: str
+    field: str
+    original: str
+    replacement: str
+    reason: str
+
+
+def read_overrides(path: Path | None) -> list[Override]:
+    """Read the overrides file (``None`` or a missing default file means none)."""
+    if path is None or not path.is_file():
+        return []
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ImportError_(f"cannot read overrides {path}: {exc}") from exc
+    if not isinstance(raw, list):
+        raise ImportError_(f"{path}: expected a list of objects")
+    result = []
+    for index, item in enumerate(raw):
+        try:
+            override = Override(
+                id=item["id"],
+                field=item["field"],
+                original=item["from"],
+                replacement=item["to"],
+                reason=item["reason"],
+            )
+        except (KeyError, TypeError) as exc:
+            raise ImportError_(
+                f"{path}: entry {index} lacks id/field/from/to/reason: {exc}"
+            ) from exc
+        if override.field not in OVERRIDE_FIELDS:
+            raise ImportError_(f"{path}: entry {index}: field must be one of {OVERRIDE_FIELDS}")
+        if not (
+            override.original.strip() and override.replacement.strip() and override.reason.strip()
+        ):
+            raise ImportError_(f"{path}: entry {index}: from, to and reason must not be empty")
+        result.append(override)
+    return result
+
+
+def apply_overrides(book: Workbook, overrides: list[Override]) -> dict[str, list[Override]]:
+    """Apply the overrides in place; return the applied ones per viewpoint id.
+
+    An override whose original text is gone but whose replacement is present was applied
+    upstream already: it is skipped (and ``obsolete`` is reported by the CLI).
+    """
+    by_id = {vp.id: vp for vp in book.viewpoints}
+    applied: dict[str, list[Override]] = {}
+    for override in overrides:
+        vp = by_id.get(override.id)
+        if vp is None:
+            raise ImportError_(f"override for unknown viewpoint {override.id}")
+        text = getattr(vp, override.field)
+        if override.original in text:
+            setattr(vp, override.field, text.replace(override.original, override.replacement))
+            applied.setdefault(vp.id, []).append(override)
+        elif override.replacement in text:
+            print(
+                f"note: override for {vp.id} ({override.field}) is obsolete; the workbook "
+                "already says it. Remove it from the overrides file.",
+                file=sys.stderr,
+            )
+        else:
+            raise ImportError_(
+                f"override for {vp.id} ({override.field}): the original text is not in the "
+                "workbook any more (and the replacement is not there either); update the override"
+            )
+    return applied
+
+
 # ------------------------------------------------------------------ viewpoint mapping
 
 
@@ -296,13 +393,39 @@ def risk_of(vp: Viewpoint, status_by_viewpoint: dict[str, int]) -> str:
     return "medium"
 
 
-def viewpoint_entity(vp: Viewpoint, status_by_viewpoint: dict[str, int]) -> dict:
+def override_source(vp: Viewpoint, applied: list[Override], originals: dict[str, str]) -> dict:
+    """The ``source`` entry that records an override and keeps the original text."""
+    notes = []
+    for override in applied:
+        notes.append(
+            f"差し替え（{override.field}）。理由: {override.reason} "
+            f"原文: {originals[override.field]}"
+        )
+    return {
+        "kind": "other",
+        "ref": (
+            "観点表の本文を差し替え済み"
+            "（tools/viewpoint_overrides.json。docs/VIEWPOINT-OVERRIDES.md）"
+        ),
+        "note": " / ".join(notes),
+    }
+
+
+def viewpoint_entity(
+    vp: Viewpoint,
+    status_by_viewpoint: dict[str, int],
+    applied: list[Override] | None = None,
+    originals: dict[str, str] | None = None,
+) -> dict:
     """Build the hub ``Viewpoint`` entity (keys in schema order)."""
+    sources = parse_sources(vp.source_raw)
+    if applied:
+        sources.append(override_source(vp, applied, originals or {}))
     return {
         "id": ID_PREFIX + vp.id,
         "title": vp.title,
         "rationale": rationale_of(vp),
-        "source": parse_sources(vp.source_raw),
+        "source": sources,
         "risk": risk_of(vp, status_by_viewpoint),
         "parents": [],
     }
@@ -560,10 +683,14 @@ def write_if_changed(path: Path, text: str) -> None:
         handle.write(text)
 
 
-def run(xlsx: Path, spec_md: Path, out_root: Path) -> dict[str, int]:
+def run(
+    xlsx: Path, spec_md: Path, out_root: Path, overrides_path: Path | None = None
+) -> dict[str, int]:
     """Generate all outputs under ``out_root``; return counts."""
     book = read_workbook(xlsx)
     spec_cases, spec_table = read_spec_cases(spec_md)
+    originals = {vp.id: {f: getattr(vp, f) for f in OVERRIDE_FIELDS} for vp in book.viewpoints}
+    applied = apply_overrides(book, read_overrides(overrides_path))
 
     status_by_viewpoint: dict[str, int] = {}
     for row in book.codes:
@@ -571,7 +698,7 @@ def run(xlsx: Path, spec_md: Path, out_root: Path) -> dict[str, int]:
             status_by_viewpoint[vp_id] = max(status_by_viewpoint.get(vp_id, 0), row.status)
 
     for vp in book.viewpoints:
-        entity = viewpoint_entity(vp, status_by_viewpoint)
+        entity = viewpoint_entity(vp, status_by_viewpoint, applied.get(vp.id), originals.get(vp.id))
         write_if_changed(
             out_root / "specs" / "viewpoints" / f"{entity['id']}.yaml", viewpoint_yaml(entity)
         )
@@ -582,7 +709,12 @@ def run(xlsx: Path, spec_md: Path, out_root: Path) -> dict[str, int]:
         out_root / "docs" / "spec-trace.md",
         render_trace(book, spec_cases, spec_table, xlsx.name, spec_md.name),
     )
-    return {"viewpoints": len(book.viewpoints), "codes": len(book.codes), "cases": len(spec_cases)}
+    return {
+        "viewpoints": len(book.viewpoints),
+        "codes": len(book.codes),
+        "cases": len(spec_cases),
+        "overrides": sum(len(v) for v in applied.values()),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -591,18 +723,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--xlsx", type=Path, required=True, help="viewpoint workbook")
     parser.add_argument("--spec-md", type=Path, required=True, help="case document (Markdown)")
     parser.add_argument("--out-root", type=Path, default=Path("."), help="repository root")
+    parser.add_argument(
+        "--overrides",
+        type=Path,
+        default=DEFAULT_OVERRIDES,
+        help="owner-decided cell replacements (default: tools/viewpoint_overrides.json)",
+    )
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return 2 if exc.code else 0
     try:
-        counts = run(args.xlsx, args.spec_md, args.out_root)
+        counts = run(args.xlsx, args.spec_md, args.out_root, args.overrides)
     except ImportError_ as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(
         f"imported {counts['viewpoints']} viewpoints, {counts['codes']} codes; "
-        f"{counts['cases']} cases in the case document"
+        f"{counts['cases']} cases in the case document; "
+        f"{counts['overrides']} override(s) applied"
     )
     return 0
 

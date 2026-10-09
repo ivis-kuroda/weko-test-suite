@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-"""Lists the "on hold" findings (A-5) in a saved evidence directory.
+"""Lists the out-of-scope ERROR lines of a saved evidence directory, as remarks.
 
-A-5: an ERROR-level application-log line that appears before a 4xx response
-(the code logs with ``logger.error`` and then raises; a 4xx should be logged
-at WARNING only). The owner's decision is that such a line does **not** fail
-a test: the specification's ``evidence.ignore`` patterns tolerate it
-(``(WARNING|ERROR).*<code or message>``), so the verdict stays ``pass``, but the
-line is still in the saved ``diff-app-log-*`` file. This script finds those
-lines so they can be recorded in the result row as ``on hold`` (inconclusive by
-design, with a remark) instead of being lost behind a green run.
+The application log never decides a verdict (docs/LOG-JUDGEMENT.md): WEKO writes
+ERROR lines and stack traces for harmless and critical conditions alike, also far
+outside what a change touched. A case passes or fails on its own expectations, among
+them the presence of the expected handler line. Whatever else the log holds stays in
+the saved ``diff-app-log-*`` file; this script summarises it so a human can put it in
+the result row's remark column instead of losing it behind a green run.
 
-Reads ``<evidence-dir>/<run-id>/index.json`` (written by the hub's Python
-runner when ``ATH_EVIDENCE_DIR`` is set) and, per entity, the app-log diff
-files and the HTTP exchange files next to it. An entity is reported when it
-has at least one ERROR line in the added app-log lines and at least one 4xx
-HTTP response. Lines that look like an expected 5xx failure (traceback,
-"Internal Server Error", a 3xxx code) are skipped.
+Per entity (case or scenario) it reports the ERROR-level lines added to the log during
+the run, except the handler lines of a 5xx response (``[3108] GET /sword/...: ...``,
+which that response is expected to log at ERROR), and the number of stack traces. When
+the entity also received a 4xx response, the ERROR lines are marked ``A-5 candidate``:
+spec v4.2 4.5 A-5 is an ERROR line logged before a 4xx is raised (basic design 5.4: 4xx
+is WARNING only). It is a remark for the implementation team, never a failure.
 
-Exit status is always 0 for a readable directory (a finding is not a failure);
-2 for usage errors. ``--strict`` exits 1 when anything is on hold, for people
-who want a gate.
+Reads ``<evidence-dir>/<run-id>/index.json`` (written by the hub's Python runner when
+``ATH_EVIDENCE_DIR`` is set) and, per entity, the app-log diff files and the HTTP
+exchange files next to it. The exit status is 0 for a readable directory (2 for usage
+errors); ``--strict`` exits 1 when there is any remark, for people who want a gate.
 
 Standard library only.
 """
@@ -35,7 +34,8 @@ from pathlib import Path
 from typing import Any
 
 _ERROR_LEVEL = re.compile(r"\bERROR\b")
-_EXPECTED_5XX = re.compile(r"Traceback|Internal Server Error|WEKO_SWORDSERVER_E_3\d{3}")
+_TRACEBACK = re.compile(r"Traceback \(most recent call last\)")
+_HANDLER_LINE = re.compile(r"\[(?:WEKO_SWORDSERVER_E_)?\d{4}\] [A-Z]+ /sword/")
 
 
 def _load_json(path: Path) -> Any:
@@ -54,20 +54,33 @@ def _status_of(exchange: Any) -> int | None:
     return None
 
 
-def error_lines(diff_text: str) -> list[str]:
-    """ERROR-level lines among the lines a unified diff added."""
-    out = []
-    for line in diff_text.splitlines():
-        if not line.startswith("+") or line.startswith("+++"):
+def added_lines(diff_text: str) -> list[str]:
+    """The lines a unified diff added (the lines logged during the run)."""
+    return [
+        line[1:]
+        for line in diff_text.splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    ]
+
+
+def summarise_log(added: list[str], has_5xx: bool) -> dict[str, Any]:
+    """ERROR-level lines and stack traces among ``added``.
+
+    The ERROR handler line of a 5xx response is the expected one and is not reported.
+    """
+    errors = []
+    for line in added:
+        body = line.strip()
+        if not _ERROR_LEVEL.search(body):
             continue
-        body = line[1:]
-        if _ERROR_LEVEL.search(body) and not _EXPECTED_5XX.search(body):
-            out.append(body.strip())
-    return out
+        if has_5xx and _HANDLER_LINE.search(body):
+            continue
+        errors.append(body)
+    return {"error_lines": errors, "traces": sum(1 for line in added if _TRACEBACK.search(line))}
 
 
 def scan_run(run_dir: Path) -> list[dict[str, Any]]:
-    """Findings of one run directory (the one holding ``index.json``)."""
+    """Remarks of one run directory (the one holding ``index.json``)."""
     index = _load_json(run_dir / "index.json")
     if not isinstance(index, dict):
         return []
@@ -76,7 +89,7 @@ def scan_run(run_dir: Path) -> list[dict[str, Any]]:
         entity = entry.get("entity")
         if entity is None:
             continue
-        slot = by_entity.setdefault(entity, {"statuses": [], "errors": []})
+        slot = by_entity.setdefault(entity, {"statuses": [], "added": []})
         path = run_dir / entry.get("path", "")
         if entry.get("source") == "http_exchange":
             status = _status_of(_load_json(path))
@@ -84,40 +97,46 @@ def scan_run(run_dir: Path) -> list[dict[str, Any]]:
                 slot["statuses"].append(status)
         elif entry.get("source") == "app_log" and entry.get("role") == "diff":
             with contextlib.suppress(OSError):
-                slot["errors"].extend(error_lines(path.read_text(encoding="utf-8")))
-    findings = []
+                slot["added"].extend(added_lines(path.read_text(encoding="utf-8")))
+    remarks = []
     for entity, slot in sorted(by_entity.items()):
-        statuses_4xx = sorted({s for s in slot["statuses"] if 400 <= s < 500})
-        if slot["errors"] and statuses_4xx:
-            findings.append(
+        statuses = sorted(set(slot["statuses"]))
+        summary = summarise_log(slot["added"], any(s >= 500 for s in statuses))
+        if summary["error_lines"] or summary["traces"]:
+            remarks.append(
                 {
                     "run": run_dir.name,
                     "entity": entity,
-                    "status_4xx": statuses_4xx,
-                    "error_lines": slot["errors"],
+                    "statuses": statuses,
+                    "a5_candidate": bool(summary["error_lines"])
+                    and any(400 <= s < 500 for s in statuses),
+                    **summary,
                 }
             )
-    return findings
+    return remarks
 
 
 def scan(evidence_dir: Path) -> list[dict[str, Any]]:
-    """Findings of every run directory under ``evidence_dir`` (or of it, if it is one)."""
+    """Remarks of every run directory under ``evidence_dir`` (or of it, if it is one)."""
     if (evidence_dir / "index.json").is_file():
         return scan_run(evidence_dir)
-    findings: list[dict[str, Any]] = []
+    found: list[dict[str, Any]] = []
     for child in sorted(p for p in evidence_dir.iterdir() if p.is_dir()):
-        findings.extend(scan_run(child))
-    return findings
+        found.extend(scan_run(child))
+    return found
 
 
-def remark(finding: dict[str, Any]) -> str:
-    """Remark text for the result row of an entity that passed with an A-5 finding."""
-    n = len(finding["error_lines"])
-    return (
-        f"on hold (A-5): {n} ERROR-level app-log line(s) before 4xx "
-        f"{','.join(str(s) for s in finding['status_4xx'])}; tolerated by design, "
-        f"see diff-app-log in run {finding['run']}"
+def remark(item: dict[str, Any]) -> str:
+    """Remark text for the result row of an entity whose log held out-of-scope lines."""
+    n = len(item["error_lines"])
+    text = (
+        f"out-of-scope log lines (not part of the verdict): {n} ERROR line(s), "
+        f"{item['traces']} stack trace(s)"
     )
+    if item["a5_candidate"]:
+        codes = ",".join(str(s) for s in item["statuses"] if 400 <= s < 500)
+        text += f"; A-5 candidate: ERROR logged with 4xx {codes}"
+    return f"{text}; see diff-app-log in run {item['run']}"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -125,24 +144,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("evidence_dir", type=Path, help="ATH_EVIDENCE_DIR or one run directory")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--rows", action="store_true", help="print one remark per entity")
-    parser.add_argument("--strict", action="store_true", help="exit 1 when anything is on hold")
+    parser.add_argument("--strict", action="store_true", help="exit 1 when there is any remark")
     args = parser.parse_args(argv)
     if not args.evidence_dir.is_dir():
         print(f"not a directory: {args.evidence_dir}", file=sys.stderr)
         return 2
-    findings = scan(args.evidence_dir)
+    found = scan(args.evidence_dir)
     if args.json:
-        print(json.dumps(findings, ensure_ascii=False, indent=2))
+        print(json.dumps(found, ensure_ascii=False, indent=2))
     elif args.rows:
-        for f in findings:
-            print(f"{f['entity']}\t{remark(f)}")
+        for item in found:
+            print(f"{item['entity']}\t{remark(item)}")
     else:
-        for f in findings:
-            print(f"{f['entity']}  (run {f['run']}, 4xx: {f['status_4xx']})")
-            for line in f["error_lines"]:
+        for item in found:
+            flag = "  [A-5 candidate]" if item["a5_candidate"] else ""
+            print(f"{item['entity']}  (run {item['run']}, statuses: {item['statuses']}){flag}")
+            for line in item["error_lines"]:
                 print(f"    {line}")
-        print(f"\n{len(findings)} entity(ies) on hold (A-5)")
-    return 1 if (args.strict and findings) else 0
+        print(
+            f"\n{len(found)} entity(ies) with out-of-scope ERROR lines or stack traces "
+            "(remarks only)"
+        )
+    return 1 if (args.strict and found) else 0
 
 
 if __name__ == "__main__":

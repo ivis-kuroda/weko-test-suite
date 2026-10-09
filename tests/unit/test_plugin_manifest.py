@@ -1,6 +1,5 @@
 """plugin.yaml loads, and its SWORD operations put the right things on the wire."""
 
-import json
 from pathlib import Path
 
 import httpx
@@ -19,6 +18,7 @@ REQUIRED_OPERATIONS = [
     "OP-SWORD-DELETE",
     "OP-HELPER",
     "OP-DOCKER-LOGS",
+    "OP-APP-LOG",
     "OP-REDIS-CLI",
     "OP-DOCKER-STOP",
     "OP-DOCKER-START",
@@ -124,8 +124,23 @@ def test_put_and_delete_target_the_record():
     assert "authorization" not in delete.headers
 
 
-def test_policy_decides_on_the_app_log_for_both_polarities():
+def test_the_app_log_is_a_presence_gate_never_a_content_gate():
+    """`clean` works only with the `.*` ignore every entity carries (tools/check_log_rule.py).
+
+    `informational` for every channel would make every verdict inconclusive: the hub needs one
+    channel that decided. See docs/LOG-JUDGEMENT.md.
+    """
     rules = MANIFEST.policy["rules"]
     assert rules["nominal"]["app_log"] == "clean"
     assert rules["error"]["app_log"] == "clean"
-    assert json.dumps(MANIFEST.evidence["app_log"]["operation"]) == '"OP-DOCKER-LOGS"'
+    assert MANIFEST.evidence["app_log"]["operation"] == "OP-APP-LOG"
+    assert MANIFEST.evidence["app_log"]["params"] == {"since": "{{run.startedAt}}"}
+
+
+def test_the_app_log_operation_reads_the_web_container_since_a_timestamp():
+    op = MANIFEST.operations["OP-APP-LOG"]
+    assert op["executor"] == "shell"
+    assert op["run"] == [
+        "docker", "logs", "--since", "{{param.since}}", "{{env.WEKO_WEB_CONTAINER}}"
+    ]
+    assert op["params"] == ["since"]

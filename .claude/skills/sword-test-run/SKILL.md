@@ -1,6 +1,6 @@
 ---
 name: sword-test-run
-description: Run the generated SWORD v3 error-code tests against a real local WEKO in the order and groups of spec v4.2 section 0.6 - 3-second spacing for same-recid EP4/EP5, ATH_EVIDENCE_DIR and collecting evidence, the pre-change baseline capture on build 779c2d70 (S0-06, settles U-21/U-01), triage with the hub triage-run-result skill, A-5 on-hold findings, destructive-group rules and recovery (S0-08), and what is and is not verified. Use after weko-env-up has passed, whenever the owner asks to execute or re-execute the suite or record results.
+description: Run the generated SWORD v3 error-code tests against a real local WEKO in the order and groups of spec v4.2 section 0.6 - 3-second spacing for same-recid EP4/EP5, ATH_EVIDENCE_DIR and collecting evidence, the pre-change baseline capture on build 779c2d70 (S0-06, settles U-21/U-01), triage with the hub triage-run-result skill, the log-judgement rule (positive handler-line checks; out-of-scope ERROR lines are remarks), not_runnable cases, destructive-group rules and recovery (S0-08), and what is and is not verified. Use after weko-env-up has passed, whenever the owner asks to execute or re-execute the suite or record results.
 ---
 
 # Running the SWORD suite against WEKO
@@ -12,11 +12,13 @@ every test creates uniquely named data (`ath-<run.id>-...`) and cleans up after 
 ## What is and is not verified (state this in every report)
 
 - Verified only on the rig (`tools/sword-stub`, **not WEKO**): the plumbing - multipart,
-  env tokens, `{{step.x}}`, `produces`, cleanup, JSON assertions, evidence masking, A-5 handling.
+  env tokens, `{{step.x}}`, `produces`, cleanup, JSON assertions, evidence masking, the log-judgement rule
+  (a missing handler line fails; out-of-scope ERROR noise does not).
 - NOT verified: any behaviour of real WEKO, every helper ORM path, tokens with the
   `WEKO_TEST_TOKEN_` prefix under JWT, RLS recipes, `create_record`/`delete_record` side effects, the
-  Workflow deletion flow (Start+End -> 204), the Redis lock key, the log line format and wording the
-  `evidence.ignore` patterns assume. A pass on real WEKO is the first real evidence; a failure is
+  Workflow deletion flow (Start+End -> 204), the Redis lock key, and the real log line format: the
+  handler-line expectations assume `<LEVEL> ... [<code>] METHOD path: message` on ONE line with the level before
+  the code (detailed design 2.2 step 3; the stub uses exactly that, real WEKO's logger prefix is unseen). A pass on real WEKO is the first real evidence; a failure is
   as likely to be a test/spec/environment defect as a target defect.
 - Out of Tier 1 (not generated): S1-01/S1-02 (UI), toggle cases (duplicate check S5-07 1503, XML S5-05,
   OBO setting S4-01, upload limit S5-03/S6-03/S12-02 413), S11-02 (locale method U-11), S7 locks, S9 UI,
@@ -27,6 +29,7 @@ every test creates uniquely named data (`ath-<run.id>-...`) and cleans up after 
 `WEKO_BASE_URL`, container names `WEKO_*_CONTAINER`, `SW_USER_*`, `SW_TOKEN_*`, `SW_CLIENT_ID_*`,
 `SW_R1..SW_R9`, `SW_WORKFLOW_ID`, `SW_DELETE_FLOW_ID`, `SW_REDIS_DB` (from `.env` / `.env.local`);
 `ATH_EVIDENCE_DIR` (where evidence is saved; unset = nothing saved and nothing can be triaged);
+`ATH_BROWSER_IGNORE_HTTPS_ERRORS=1` (UI cases over the self-signed https; the hub reads it, no code edit);
 `NO_PROXY=127.0.0.1`. Never print values; never commit evidence (`artifacts/` is git-ignored).
 
 ## Procedure
@@ -60,25 +63,35 @@ every test creates uniquely named data (`ath-<run.id>-...`) and cleans up after 
    scripts/run-ordered.sh --out artifacts/run-1        # 3 s gap between files, evidence in artifacts/run-1/evidence
    ```
    Inside one scenario the test code cannot sleep: S3-03 (two DELETE), S5-08 (three PUT on R1) and S6-01 call the
-   same recid twice or more. They should fail before the lock (2101/150x precede it), but this is UNVERIFIED:
-   if a 2201 appears there, record a spec defect and propose a spacing step; do not edit generated code.
+   same recid twice or more. Owner decision 2026-10-09: same-recid back-to-back calls are acceptable when the test
+   needs them; the only spacing required is the 3 s between files (`run-ordered.sh --gap`, default 3). They should
+   fail before the lock anyway (2101/150x precede it); if a 2201 still appears, record it as a remark, do not edit
+   generated code.
    Run serially (no xdist) and never two runs at once against the same WEKO.
 4. **Collect.** `artifacts/<run>/evidence/<run-id>/index.json` plus per entity/location files
    (`during-network-http-*`, `before|after|diff-app-log-*`, `-db-log-`, `-db-records-`), and `junit/*.xml`.
    Pack with `tar czf run-1.tgz artifacts/run-1` for the owner; evidence is masked for known headers and
    `WEKO_TEST_TOKEN_*`, but check before sharing.
-5. **A-5 on hold.** The specs tolerate an ERROR line before a 4xx (the entity still passes). List them:
+5. **Log judgement (owner decision 2026-10-09; `docs/LOG-JUDGEMENT.md`).** The application log is NOT a
+   negative gate: WEKO emits ERROR lines and stack traces for harmless and critical conditions alike, also outside the
+   changed scope. A case passes or fails on its own expectations; for every coded 4xx/5xx one of them is an
+   `operation_result` over `OP-APP-LOG` (log since `{{run.startedAt}}`) that finds the expected handler line
+   `<LEVEL> ... [<code>] METHOD path: message` (4xx WARNING, 500/501/503 ERROR, a 503 propagated by type with its
+   stack trace). A *missing* handler line, a wrong level or a wrong code is a failure (triage it: target defect,
+   or a format assumption of the spec). Everything else in the log stays in the saved `diff-app-log-*` file and
+   goes into the result row's remark column; it never changes a verdict:
    ```sh
-   uv run python tools/a5_scan.py artifacts/run-1/evidence --rows      # one remark per entity
+   uv run python tools/log_remarks.py artifacts/run-1/evidence --rows    # one remark per entity
    ```
-   Record these entities with verdict as run (pass) and remark `on hold (A-5)` + the log line; result value
-   "保留" (spec 0.5) with category 実装不具合候補 A-5. Never loosen patterns to hide *other* ERROR lines.
+   `A-5 candidate` in a remark means an ERROR line was logged together with a 4xx (spec 4.5 A-5; basic design 5.4: 4xx is
+   WARNING only): record it as 実装不具合候補 A-5 for the implementation team, with the line. Never loosen the handler
+   patterns to make a case pass; never add an ignore pattern other than `.*` (`tools/check_log_rule.py` refuses it).
 6. **Triage** every non-pass with the hub skill `triage-run-result` (`agentic-test-hub/.claude/skills/triage-run-result`):
    classes test / target / spec / environment defect / inconclusive-by-design, using the evidence index; one result row
    per entity. Rules: confirm environment suspicion by rerunning on clean state; reproduce target defects once;
    never turn a fail into a pass by editing expectations - propose a spec diff for `spec-draft/sword-error-codes`
    (YAML-only commits there) and let the owner decide. Typical first-run suspects: helper ORM errors (test defect),
-   wording/format assumptions of `evidence.ignore` (spec defect), 401 vs 403 (U-21), consumed R4/R5 (environment).
+   the handler-line format assumption (spec defect; see step 5), 401 vs 403 (U-21), consumed R4/R5 (environment).
 7. **Destructive groups last (S14/S15) - rules.**
    - Not generated yet. When generated, they run only as a final group, after everything else and after the
      baseline capture, never in parallel, never mixed with other files.
@@ -93,9 +106,18 @@ every test creates uniquely named data (`ath-<run.id>-...`) and cleans up after 
      curl -s "http://127.0.0.1:29201/_cluster/health"                                     # not red
      ```
      With the DB down even valid tokens give 503 (token lookup), not 401 (Q-1).
-8. **Report**: counts per verdict, A-5 list, per non-pass the triage row, the baseline numbers, what is still
+8. **Report**: counts per verdict, the out-of-scope log remarks (A-5 candidates listed), per non-pass the triage row, the baseline numbers, what is still
    unverified, and the owner decisions you need (see `HANDOFF.md` open decisions). Do not mark any case `verified` in
    specs yourself; propose it.
+
+## Not runnable cases
+
+`automation.status: not_runnable` (hub) marks a case that cannot be run without modifying WEKO's source. The hub refuses to
+generate it; it is not a failure and is not run. Current ones: `TC-SW-S15-07` (3107) and `TC-SW-S15-15` (1411, mock
+M14); reasons, dates and check methods are in the YAML (`automation.reason/checkedAt/checkedBy`) and in
+`docs/TIER1-STATUS.md`. Report them as 実施不可 with that text (spec 0.6.3). Never mark a case `not_runnable` when a DB,
+data or configuration route exists (those are manual/Tier 2); if a spike (e.g. M14 with the owner's source-change
+approval) works, set the status back to `manual`.
 
 ## Tier 2 (not automated; document, do not run unattended)
 
@@ -106,7 +128,7 @@ Toggle-dependent cases need a configuration change and, for some, a restart; ver
   `invenio.cfg` from `scripts/instance.cfg`; restart web); role exclusion `WEKO_ITEMS_UI_SHARED_USER_EXCLUDED_ROLE_NAME_LIST` (U-08).
 - Upload limit L (S5-03/S6-03/S12-02 413, S0-12): `WEKO_SWORDSERVER_SERVICEDOCUMENT_MAX_UPLOAD_SIZE` lowered to e.g. 1048576,
   web restart, run only S5-03, restore default and restart (forgetting makes every later upload 413); use port 5001 (nginx may answer 413 first).
-- UI cases (S1-02 token revoke, S9, S8-04) by real Playwright over `https://weko3.example.org` (hosts entry, cert trusted: see `weko-env-up`).
+- UI cases (S1-02 token revoke, S9, S8-04) by real Playwright over `https://weko3.example.org` (hosts entry and `ATH_BROWSER_IGNORE_HTTPS_ERRORS=1`: see `weko-env-up`).
 
 ## Pitfalls
 

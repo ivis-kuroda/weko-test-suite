@@ -709,6 +709,52 @@ def test_log_levels_and_no_secrets(client, rig):
     assert all(re.match(r"\d{4}-\d\d-\d\dT[\d:.]+Z (INFO|WARNING|ERROR) ", line) for line in lines)
 
 
+def test_handler_line_has_the_shape_of_the_real_one(client, rig):
+    """Detailed design 2.2 step 3: "[{code}] {method} {path}: {message}"; 4xx WARNING, 5xx ERROR."""
+    client.post("/sword/service-document", headers=auth(), files={"note": (None, "x")})
+    client.post("/__stub__/fault", json={"code": "3109", "endpoint": "PUT /sword/deposit/{recid}"})
+    client.put("/sword/deposit/1", headers=auth(), files={"note": (None, "x")})
+    text = rig.log_path.read_text()
+    assert re.search(
+        r"^\S+ WARNING sword-stub: \[1301\] POST /sword/service-document: No file part\.$",
+        text,
+        re.MULTILINE,
+    )
+    assert re.search(r"^\S+ ERROR sword-stub: \[1301\]", text, re.MULTILINE) is None
+
+
+def test_faithful_log_and_noise_add_error_lines_but_keep_the_handler_line(tmp_path):
+    config = copy.deepcopy(EXAMPLE_CONFIG)
+    config.setdefault("settings", {}).update({"faithful_log": True, "noise_log": True})
+    log = tmp_path / "app.log"
+    running = Running(config, str(log))
+    try:
+        with httpx.Client(base_url=running.url, timeout=10) as http:
+            http.post("/sword/service-document", headers=auth(), files={"note": (None, "x")})
+    finally:
+        running.stop()
+    text = log.read_text()
+    assert "out-of-scope noise" in text and "Traceback (most recent call last):" in text
+    assert re.search(r"ERROR sword-stub: No file part\.", text)  # the pre-raise line (A-5)
+    assert re.search(r"WARNING sword-stub: \[1301\] POST /sword/service-document:", text)
+
+
+def test_handler_log_false_leaves_the_handler_line_out(tmp_path):
+    config = copy.deepcopy(EXAMPLE_CONFIG)
+    config.setdefault("settings", {}).update({"handler_log": False, "faithful_log": True})
+    log = tmp_path / "app.log"
+    running = Running(config, str(log))
+    try:
+        with httpx.Client(base_url=running.url, timeout=10) as http:
+            resp = http.post("/sword/service-document", headers=auth(), files={"note": (None, "x")})
+    finally:
+        running.stop()
+    assert resp.status_code == 400
+    text = log.read_text()
+    assert "[1301]" not in text
+    assert "ERROR sword-stub: No file part." in text  # only the pre-raise ERROR line remains
+
+
 def test_unknown_path_404_and_method_405(client):
     assert client.get("/nope").status_code == 404
     assert client.request("PATCH", "/sword/service-document").status_code == 405

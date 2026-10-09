@@ -58,6 +58,14 @@ Confidence: H = likely works, M = plausible, L = doubtful. "Spike" = first thing
 5. Repeat the probe: the **normal response** returns (spec: every mock must be switchable off).
 6. Record per mock: recipe, params, observed code, observed log line, "reproduced / not reproduced / different code".
 
+Authoring the S14/S15 case for a mock: the log is judged *positively* (`docs/LOG-JUDGEMENT.md`, `tools/log_expect.py`):
+an `operation_result` over `OP-APP-LOG` with `Variant(code, status)`; 500/501/503 are ERROR, and a 503 that propagates by type
+(3108-3110 via `handle_dependency_error`, EP3/EP5 and the authentication stage) also needs `trace=True`
+(the stack trace attached to the handler line, spec C-5xx-3). 3108-3110 reached through the fixed value in the EP2/EP4 import
+stage get no trace requirement (F-08): record whether a trace is present, do not assert it. The ERROR lines and traces WEKO
+writes on its own are never judged. If a spike fails and the owner declines the source change, mark the case `not_runnable`
+with reason, checkedAt and checkedBy in the YAML (spec-draft) instead of leaving it manual.
+
 If a step fails and a fault stays, `restore_fault {"kind":"all"}` sweeps `ath_fault_*` triggers, constraints, policies
 and functions; if even that fails, inspect `pg_trigger`, `pg_policy`, `pg_proc` for `ath_fault_%` in the DB container and report.
 

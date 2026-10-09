@@ -14,9 +14,11 @@ v4.2 ケース仕様書の Tier-1 範囲を、hub の仕様エンティティ（
 | 阻害 | 実 WEKO での実行を妨げる、または自動化できない理由 |
 
 rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 件 S8-02 はスタブが WEKO と違うために落ちる）。
-`--faithful-log` を付けるとスタブが 4xx の前に ERROR 行を出す（修正前の実コードの挙動、A-5）。
-**この場合も 68 件中 67 件合格する**（A-5 は不合格にしない。下の「A-5 の扱い」）。終了時に `tools/a5_scan.py` が
-「保留（on hold）」の所見を列挙し、`--all` で 1 件も出なければ rig-run.sh が失敗する（ERROR 行が見えなくなっていないことの確認）。
+`--faithful-log` を付けるとスタブが 4xx の前に ERROR 行を出し、無関係な ERROR とスタックトレースも毎回出す（修正前の実コードの挙動 A-5 と、
+範囲外のノイズ）。**この場合も 68 件中 67 件合格する**（ログの内容では不合格にしない。下の「ログ判定」）。終了時に
+`tools/log_remarks.py` が範囲外の ERROR 行を備考として列挙し、`--all` で 1 件も出なければ rig-run.sh が失敗する
+（ERROR 行が証跡から見えなくなっていないことの確認）。`--no-handler-log` はスタブがハンドラ行
+`[コード] メソッド パス: メッセージ` を出さなくなる指定で、ハンドラ行を断言する全件（68 件中 29 件）が不合格になる（肯定判定の確認）。
 
 ## エンティティ数
 
@@ -25,7 +27,7 @@ rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 �
 | 基準（BL-SW-GET-SERVICE-DOC / POST-DIRECT / GET / PUT-DIRECT / DELETE-DIRECT） | 5 |
 | 因子（水準） | 6（EP5、書き込み EP2、トークン状態2、ロール5、ファイル不備4、パッケージ不正6） |
 | マトリクス | 4（S1-03、S2-01、S5-02、S5-05） |
-| ケース `TC-` | 59（うち生成 54、手動 5） |
+| ケース `TC-` | 61（うち生成 54、手動 5、実施不可 2） |
 | シナリオ `SC-` | 15（うち生成 14、手動 1） |
 | 生成テスト | 68 |
 
@@ -57,24 +59,50 @@ rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 �
 | S12-02 | `SC-SW-S12-02` | ○ | ○ | ○ | 413 は設定切替で除外 |
 | S12-03 | `SC-SW-S12-03` | ○ | ○ | ○ | |
 | S12-04 | `TC-SW-S12-04` | ○ | - | - | `manual`、`blocked:pre-change-baseline`（比較対象も基準値も無い） |
+| S15-07 | `TC-SW-S15-07` | ○ | - | - | `not_runnable`（下の「実施不可」）。仕様書も実施不可でクローズ |
+| S15-15 | `TC-SW-S15-15` | ○ | - | - | `not_runnable`（M14。下の「実施不可」） |
 
-## A-5 の扱い（保留 = on hold）
+## ログ判定（A-5 を含む。オーナー決定 2026-10-09）
 
-**A-5**: 4xx 応答の前に ERROR レベルのログ行が出ること（実コードは `logger.error` を出してから例外を送出する）。
-オーナー決定: **不合格にしない。所見として記録し、状態を「保留（on hold）」とする**（設計上 inconclusive + 備考）。
+WEKO の内部は、重要でない状況も範囲外の状況も区別せず、ERROR ログとスタックトレースを出す。そのため「ログに ERROR が
+ない」を判定条件にすると範囲外のノイズを判定に引き込む。**アプリケーションログの内容では不合格にしない**。代わりに
+ケースごとに「期待するハンドラ行が正しい場所から正しいレベルで存在する」ことを肯定的に確認する。詳細と限界は
+[LOG-JUDGEMENT.md](./LOG-JUDGEMENT.md)。
 
-仕組み（hub の既存機能だけを使う）:
+- ハンドラ行: `[コード] METHOD path: message`（`handle_weko_swordserver_exception`。基本設計 5.4 のレベルは 4xx が WARNING、
+  500・501・503 が ERROR）。`plugin.yaml` の `OP-APP-LOG` を `operation_result` + `matches` で読む（`tools/log_expect.py` が正規表現を作る）。
+  76 エンティティのうち 36（タグ `log:handler-line`。実施不可の 2 件を含む）がこの断言を持つ。残り 40 は `log:not-judged`: コードなしの 401/403、
+  成功系、S2-01 の許可ロール、S1-03（応答だけで判定。理由は LOG-JUDGEMENT.md）。
+- 全エンティティで `evidence.ignore` は `.*`、ポリシーは `app_log: clean`（存在ゲート。収集できなければ inconclusive）。
+  `tools/check_log_rule.py`（`scripts/check.sh` が実行）がこの規則を機械検査する。
+- 範囲外の ERROR 行・スタックトレースは証跡の `diff-app-log-*` に残り、`tools/log_remarks.py <ATH_EVIDENCE_DIR>` が結果欄の
+  備考にする。4xx と一緒に ERROR が出ていた場合だけ「A-5 候補」と注記する（実装担当への所見。不合格にも保留にもしない）。
+- 観点 VP-SW-BD-60 / VP-SW-EG-19 の本文は、インポータの上書き（`tools/viewpoint_overrides.json`、
+  [VIEWPOINT-OVERRIDES.md](./VIEWPOINT-OVERRIDES.md)）で差し替えた。生成物は手で直していない。xlsx と仕様書 v4.2 への反映はオーナー。
+- **実 WEKO のログ書式でハンドラ行が合うかは未検証**（ローカルの最初のスパイクで実測する。合わなければ不合格になる。
+  直すのは `tools/log_expect.py` の 1 か所と再生成）。
 
-1. 4xx を期待するケース・シナリオ（`finding:A-5-on-hold` タグ付きの 50 件）の `evidence.ignore` は、期待するコードまたは文言を
-   `(WARNING|ERROR).*<コード/文言>` の形で書く。ERROR 行がその文言を含むなら無視され、判定は pass のまま。
-   無関係な ERROR 行（スタックトレースなど）は今までどおり不合格にする。
-2. 無視された行は消えない。保存された証跡の `diff-app-log-*` と `index.json` に残る。
-3. `uv run python tools/a5_scan.py <ATH_EVIDENCE_DIR>` が、4xx 応答があり ERROR 行も出たエンティティを列挙する
-   （`--rows` で結果行の備考文 `on hold (A-5): ...` を出す。終了コードは 0。`--strict` で 1）。
-   結果行は verdict を `pass`（または `inconclusive`）のまま、備考に `on hold (A-5)` を書いて記録する（`sword-test-run` スキル）。
+## 実施不可（not_runnable）
 
-仕様の観点 VP-SW-BD-60 / VP-SW-EG-19 の本文は「ERROR 行があれば不合格」と書かれたままで、本決定と食い違う
-（レビュー済みの本文は変えていない。改訂するかはオーナー判断）。
+hub の `automation.status: not_runnable`（reason／checkedAt／checkedBy）。**ソース変更なしでは実施できないことが、
+コードの読み取りで確かめられたものだけ**に付けた。オーナーの確認待ち（承認が出てソース変更でやる場合は `manual` に戻す）。
+`ath-generate-test` は生成を拒否する。確認はすべて weko `test/sword-error-codes`（daf15d6f）の読み取り専用のコードパス確認。
+
+| ケース | 内容 | 根拠 |
+|---|---|---|
+| `TC-SW-S15-07` | Workflow 経路でアクティビティが取れず 501（3107） | `_get_status_workflow_document` が activity_id 空で 3107 を送出するが、空になるのは `import_items_to_activity` が URL なしで返すとき（error も非空）だけで、`post_service_document`／`put_object` は error があれば先に 2401／3106 系を送出する。入力・DB・設定では到達できない。仕様書 v4.2 も実施不可でクローズ |
+| `TC-SW-S15-15` | 形式判定が未知を返し 415（1411、M14） | `check_import_items` の else 節のみ。`check_import_file_format` は JSON／XML／TSV/CSV を返すか 1404〜1408 を送出するので到達不能（防御分岐）。M14 は動作中プロセスの関数の差し替えで、ソース変更（差し替え版での再起動）が要る |
+
+**付けなかったもの（確認したが、実施不可と言えない）**:
+
+- **1403（Packaging 必須）と 1408（Packaging 形式不可）**: `decorators.py` は `WEKO_SWORDSERVER_SERVICEDOCUMENT_ACCEPT_PACKAGING` に `*` が
+  あるときだけ 1403 を、`*` かつ SimpleZip/SWORDBagIt 以外の値のときに 1408（`check_import_file_format`）に至る。既定の一覧
+  では 1402 が先に出て到達しないが、**設定の変更（`["*"]` に切替。設定切替＋再起動の操作）で到達できる**。ソース変更は不要なので
+  `manual`（設定切替 Tier 2）のまま。
+- **1401（Content-Type 不可）**: リクエストとファイルパートの両方の Content-Type が許可外のときに出る。multipart ではリクエストの
+  Content-Type が許可外になるので、ファイルパートの Content-Type を許可外にすれば到達する見込み。hub の http 操作で
+  パートの Content-Type を指定できるかの問題（`blocked:content-type-not-expressible`、Q-5）で、実施不可ではない。
+- M14 以外のモック（M1〜M13、M15）: DB／データ／環境の操作で作れる見込みで、ローカルのスパイクで成否を確かめる（HANDOFF）。
 
 ## 判断事項（オーナー確認）
 
@@ -104,11 +132,10 @@ rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 �
 10. **S5-07**: 「登録済みと同一」は、item ID が R1 のファイル（`put-item --id <R1>`）を EP2 に送る形にした（推定）。
     「メタデータ不備」用のファイルが無かったので `simplezip-no-title.zip` を fixtures に追加した。
 11. **S5-08**: 1505（未登録）は ID なしのファイル（`put-item-without-id.zip`）、1506 は R2 の ID を持つファイルを R1 へ送る。
-12. **ログ**。hub の `app_log` 判定はレベルを見ないので、4xx の期待ログ（WARNING）は `WARNING.*<コードまたは文言>` で
-    抑止し、4xx の前に出る ERROR 行は A-5 として**保留**扱い（不合格にしない。下の「A-5 の扱い」）。5xx は ERROR を期待する
-    ので ERROR 側を抑止（Tier-1 では S5-06 の実測ステップだけ）。ログ書式にレベルが同じ行に出ることを仮定している。
-    コードなしの 401/403 の既存 ERROR 行は文言（`Authentication is required`、`Forbidden`、`Not allowed operation in your`）で抑止した
-    （実際の文言は未確認）。5xx の「ERROR 行がある」ことの積極的な断言は、Tier-1 に確定した 5xx ケースが無いため書いていない。
+12. **ログ**。オーナー決定（2026-10-09）で、ログの内容では不合格にしない。ケースごとに期待するハンドラ行
+    （`[コード] METHOD path: message`、4xx は WARNING、5xx は ERROR）が存在することを `OP-APP-LOG` の `operation_result` で肯定的に断言する
+    （上の「ログ判定」）。コードなしの 401/403 はログ書式が無い（`handle_unauthorized`/`handle_forbidden`）ので断言しない。
+    5xx の「ERROR 行がある」の断言は、Tier-1 に確定した 5xx ケースが S5-06 の実測ステップだけなので、そこに限る。
 13. **S6-03、S12-02 の 413**、**S5-07 の 1503**、**S5-05 の XML** は設定切替が要るため含めない（オーナー決定 4）。
 14. **S11-01**: 「英語」は、先頭語が英字で始まることと大文字スネークの識別子が出ないことで近似した。
 15. **S12-01〜S12-04**: 改修前との比較が必要な部分は書けない。S12-01 はステータスと URL・メソッド（`@id` の形）だけ。S12-04 は基準値を作らず手動。
@@ -121,7 +148,7 @@ rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 �
 
 | 担当 | 内容 |
 |---|---|
-| hub `evidence.py` | 判定がレベルを見ない（F-5）。4xx の WARNING を抑止し ERROR を残すには、パターンにレベルを含めるしかない。レベルを見る条件が欲しい |
+| hub `evidence.py` | 判定がレベルを見ない（F-5）。ログは `.*` 抑止の存在ゲートにして、ハンドラ行は `operation_result` で断言した。期待がすべて満たされ決めるチャンネルがポリシーに無いときに pass とする方式が欲しい（そうなれば `.*` は不要） |
 | スタブ `stub_server.py` | `delete_record` ヘルパーが無かった（追加済み）。Workflow の複数アイテム登録を 202 の `StatusList` で返す（実 WEKO は仕様どおりなら 400／2401）。S8-02 が落ちる理由 |
 | `plugin.yaml` | ロケール（Accept-Language）を指定する操作が無い（S11-02）。Content-Type を指定できない（S5-05）。管理設定（重複検知、XML）を切り替える操作が無い |
 | seeds / fixtures | `simplezip-no-title.zip`、`SW_TOKEN_W2` を追加済み |
@@ -130,7 +157,10 @@ rig の実行: `scripts/rig-run.sh --all`（68 件中 67 件合格。残り 1 �
 ## オーナーに決めてほしいこと
 
 1. U-21（無効トークンが 401 か 403 か）と U-01（ロール別の可否）の確定。S0-06 の改修前実測が前提。
-2. A-5（4xx の前の ERROR 行）は保留で決定済み。残りはログ書式にレベルが出ること、ERROR 行の実際の文言が許容パターンに合うことの確認（判断事項 12）。
+2. ログ判定は肯定的なハンドラ行の断言で決定済み。残りは実 WEKO のログ書式（レベルが `[コード]` より前に 1 行で出るか）の確認と、
+   仕様書 v4.2・観点表 xlsx への文面反映（VIEWPOINT-OVERRIDES.md）。
 3. 設定切替を伴うケース（重複検知、XML、上限サイズ、ロケール）を自動化するか。plugin に設定変更の操作を足す必要がある。
 4. 実メタデータ（対象環境から書き出した CSV）の用意。それまで S3-04、S8-02、S12-01 は実 WEKO で通らない可能性がある。
 5. マトリクスの `strategy`（現在 `full`）。
+6. 実施不可（`TC-SW-S15-07`、`TC-SW-S15-15`）の確認。ソース変更の承認が出るなら `manual` に戻す。1403／1408 は設定切替で到達できる
+   ので実施不可にしていない（確認の根拠は上の表）。

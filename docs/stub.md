@@ -96,8 +96,10 @@ DELETE は認可（`item:delete`）→ OBO → `2101` → DOI `2106` → OBO 対
 - ステータス文書の中身（`@id` に Object-URL、`metadata.dc:title` だけ）。
 - 項目検査の理由文（`1501` の detail）。存在しない `.id` は `1501` にした。
 - 無効な登録種別は DELETE で `3102`、PUT で `3103`、POST で `3201`。
-- 4xx の前に出す ERROR ログ（`faithful_log`）。実コードは `current_app.logger.error` を投げてから例外を送出する。
-  既定で再現する（`plugin.yaml` の方針どおり、エラーケースは ERROR 行を `ignore` で明示する）。
+- ハンドラ行 `[コード] METHOD path: message`（`handler_log`、既定で出す。4xx は WARNING、5xx は ERROR。実コードの
+  `handle_weko_swordserver_exception` の書式）。ケースはこの行の存在を肯定的に断言する（`docs/LOG-JUDGEMENT.md`）。
+- 範囲外のノイズ: 4xx の前の ERROR 行（`faithful_log`。実コードは `current_app.logger.error` を投げてから例外を送出する）と、
+  無関係な ERROR とスタックトレース（`noise_log`）。どちらも `--faithful-log` で出し、判定には使わない（証跡と備考だけ）。
 - POST 201 の `Location` ヘッダ（`location_header`、**実 WEKO は出さない。発見事項 F-6**）。
 
 ## ログ

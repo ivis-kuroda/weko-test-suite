@@ -88,7 +88,7 @@ scripts/check.sh                  # ruff・pytest・hub による検証（CI と
 `.claude/skills/` の 4 つのスキル（`weko-env-up`、`sword-test-run`、`weko-fault-injection`、
 `weko-helpers`）にある。引き継ぎ文書 `HANDOFF.md` は一時ブランチ
 `tmp/handoff-sword-error-codes` にだけ置く（機能ブランチには入れない）。
-4xx の前の ERROR 行（A-5）は不合格にせず「保留」として記録する（[docs/TIER1-STATUS.md](./docs/TIER1-STATUS.md)）。
+アプリケーションログは「ERROR がない」で判定せず、期待するハンドラ行の存在で判定する。範囲外の ERROR は備考に記録する（[docs/LOG-JUDGEMENT.md](./docs/LOG-JUDGEMENT.md)、[docs/TIER1-STATUS.md](./docs/TIER1-STATUS.md)）。
 
 ## 開発の規約
 

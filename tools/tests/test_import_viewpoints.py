@@ -240,3 +240,79 @@ def test_bad_input_is_reported(tmp_path):
     md.write_text(SPEC_MD, encoding="utf-8")
     assert iv.main(["--xlsx", str(bad), "--spec-md", str(md), "--out-root", str(tmp_path)]) == 2
     assert iv.main([]) == 2
+
+
+# ------------------------------------------------------------------ owner overrides
+
+
+def _write_overrides(path, **change):
+    item = {
+        "id": "AU-10",
+        "field": "expected",
+        "from": "期待",
+        "to": "新しい期待（ERROR 行の有無では判定しない）",
+        "reason": "オーナー決定",
+    }
+    item.update(change)
+    path.write_text(json.dumps([item], ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def test_override_replaces_the_cell_and_keeps_the_original_in_the_yaml(inputs, tmp_path):
+    xlsx, md = inputs
+    overrides = _write_overrides(tmp_path / "o.json")
+    out = tmp_path / "out"
+    counts = iv.run(xlsx, md, out, overrides)
+    assert counts["overrides"] == 1
+    text = (out / "specs/viewpoints/VP-SW-AU-10.yaml").read_text(encoding="utf-8")
+    assert "期待結果：新しい期待" in text
+    assert "kind: other" in text and "viewpoint_overrides.json" in text
+    assert "オーナー決定" in text and "原文: 期待" in text
+    # untouched viewpoints are identical to a run without overrides
+    plain = tmp_path / "plain"
+    iv.run(xlsx, md, plain)
+    other = "specs/viewpoints/VP-SW-BD-01.yaml"
+    assert (out / other).read_bytes() == (plain / other).read_bytes()
+
+
+def test_override_output_is_reproducible(inputs, tmp_path):
+    xlsx, md = inputs
+    overrides = _write_overrides(tmp_path / "o.json")
+    iv.run(xlsx, md, tmp_path / "a", overrides)
+    iv.run(xlsx, md, tmp_path / "b", overrides)
+    name = "specs/viewpoints/VP-SW-AU-10.yaml"
+    assert (tmp_path / "a" / name).read_bytes() == (tmp_path / "b" / name).read_bytes()
+
+
+def test_a_stale_override_is_an_error(inputs, tmp_path):
+    xlsx, md = inputs
+    overrides = _write_overrides(tmp_path / "o.json", **{"from": "どこにもない文"})
+    with pytest.raises(iv.ImportError_, match="original text is not in the workbook"):
+        iv.run(xlsx, md, tmp_path / "out", overrides)
+
+
+def test_an_override_already_applied_in_the_workbook_is_obsolete_not_an_error(
+    inputs, tmp_path, capsys
+):
+    xlsx, md = inputs
+    overrides = _write_overrides(tmp_path / "o.json", **{"from": "古い文", "to": "期待"})
+    counts = iv.run(xlsx, md, tmp_path / "out", overrides)
+    assert counts["overrides"] == 0
+    assert "obsolete" in capsys.readouterr().err
+
+
+def test_override_of_an_unknown_viewpoint_or_field_is_an_error(inputs, tmp_path):
+    xlsx, md = inputs
+    with pytest.raises(iv.ImportError_, match="unknown viewpoint"):
+        iv.run(xlsx, md, tmp_path / "o1", _write_overrides(tmp_path / "a.json", id="ZZ-99"))
+    with pytest.raises(iv.ImportError_, match="field must be one of"):
+        iv.run(xlsx, md, tmp_path / "o2", _write_overrides(tmp_path / "b.json", field="title"))
+
+
+def test_the_committed_overrides_file_is_well_formed():
+    overrides = iv.read_overrides(iv.DEFAULT_OVERRIDES)
+    assert {o.id for o in overrides} >= {"BD-60", "EG-19"}
+    for override in overrides:
+        # the new text states the rule; it must not say that an ERROR line means failure
+        assert "合否" in override.replacement
+        assert "不合格" not in override.replacement

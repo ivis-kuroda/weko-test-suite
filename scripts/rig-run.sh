@@ -4,9 +4,13 @@
 #   scripts/rig-run.sh TC-SW-S5-01 SC-SW-S6-01 ...   # these ids
 #   scripts/rig-run.sh --all                         # every generated test
 #   scripts/rig-run.sh --no-evidence ...             # skip evidence saving
-#   scripts/rig-run.sh --faithful-log ...            # the stub logs an ERROR line before every 4xx
-#                                                    # (what the code did before the fix, A-5): the cases must still pass (the
-#                                                    # specs tolerate it) and tools/a5_scan.py must list them as "on hold"
+#   scripts/rig-run.sh --faithful-log ...            # the stub also logs an ERROR line before every 4xx (what the code did
+#                                                    # before the fix, A-5) and an unrelated ERROR line with a stack trace
+#                                                    # on every request: out-of-scope noise. The cases must still pass (the
+#                                                    # log never decides on its content) and tools/log_remarks.py must list
+#                                                    # the noise as remarks
+#   scripts/rig-run.sh --no-handler-log ...          # the stub leaves out the handler line `[code] METHOD path: message`:
+#                                                    # every case that expects a coded 4xx/5xx must FAIL (positive check)
 #   scripts/rig-run.sh --exec <command...>           # run any command with the rig's environment
 #
 # The rig is NOT WEKO (docs/stub.md). A pass means "the generated test and the
@@ -25,6 +29,7 @@ cd "$REPO_ROOT"
 ALL=0
 EVIDENCE_ON=1
 FAITHFUL=0
+NO_HANDLER=0
 IDS=()
 EXEC=()
 while [ $# -gt 0 ]; do
@@ -35,6 +40,7 @@ while [ $# -gt 0 ]; do
     --all) ALL=1 ;;
     --no-evidence) EVIDENCE_ON=0 ;;
     --faithful-log) FAITHFUL=1 ;;
+    --no-handler-log) NO_HANDLER=1 ;;
     -*) echo "unknown option: $arg" >&2; exit 2 ;;
     *) IDS+=("$arg") ;;
   esac
@@ -65,14 +71,20 @@ mkdir -p "$EVIDENCE"
 
 uv run python seeds/build_fixtures.py build --out fixtures/generated --manifest "$WORK/manifest.json" >/dev/null
 
-# rig-tier1.json simulates the fixed behaviour (a 4xx logs only a WARNING). --faithful-log turns
-# the stub's pre-fix behaviour back on (an ERROR line before every 4xx) in a copy of the config.
+# rig-tier1.json simulates the fixed behaviour (a 4xx logs only its WARNING handler line).
+# --faithful-log turns the pre-fix behaviour back on (an ERROR line before every 4xx) and adds
+# unrelated ERROR noise on every request; --no-handler-log drops the handler line. Both work on a
+# copy of the config.
 CONFIG="$STUB_DIR/rig-tier1.json"
-if [ "$FAITHFUL" = 1 ]; then
-  uv run python - "$CONFIG" "$WORK/rig.json" <<'PY'
+if [ "$FAITHFUL" = 1 ] || [ "$NO_HANDLER" = 1 ]; then
+  uv run python - "$CONFIG" "$WORK/rig.json" "$FAITHFUL" "$NO_HANDLER" <<'PY'
 import json, sys
 config = json.load(open(sys.argv[1]))
-config["settings"]["faithful_log"] = True
+if sys.argv[3] == "1":
+    config["settings"]["faithful_log"] = True
+    config["settings"]["noise_log"] = True
+if sys.argv[4] == "1":
+    config["settings"]["handler_log"] = False
 json.dump(config, open(sys.argv[2], "w"))
 PY
   CONFIG="$WORK/rig.json"
@@ -128,11 +140,12 @@ if [ "$EVIDENCE_ON" = 1 ] && [ "${#EXEC[@]}" -eq 0 ]; then
   fi
 fi
 if [ "$FAITHFUL" = 1 ] && [ "$EVIDENCE_ON" = 1 ] && [ "${#EXEC[@]}" -eq 0 ]; then
-  # A-5 is tolerated, not hidden: the ERROR lines before 4xx must surface as "on hold" findings.
-  printf '\n== A-5 findings (on hold)\n'
-  uv run python tools/a5_scan.py "$EVIDENCE" --rows | tail -n 5 || true
-  if [ "$ALL" = 1 ] && [ -z "$(uv run python tools/a5_scan.py "$EVIDENCE" --rows)" ]; then
-    echo "FAIL: --faithful-log produced no A-5 finding (the ERROR lines are not surfacing)" >&2
+  # Out-of-scope ERROR lines never fail a case, but they must not vanish either: they have to
+  # surface as remarks (tools/log_remarks.py reads the saved diff-app-log files).
+  printf '\n== out-of-scope log remarks (never part of the verdict)\n'
+  uv run python tools/log_remarks.py "$EVIDENCE" --rows | tail -n 5 || true
+  if [ "$ALL" = 1 ] && [ -z "$(uv run python tools/log_remarks.py "$EVIDENCE" --rows)" ]; then
+    echo "FAIL: --faithful-log produced no remark (the ERROR lines are not surfacing in the evidence)" >&2
     STATUS=1
   fi
 fi

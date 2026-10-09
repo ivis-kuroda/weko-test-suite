@@ -42,16 +42,19 @@ in step 8; record each result in `HANDOFF.md` or the run notes.
    curl --cacert artifacts/weko3-server.crt https://weko3.example.org/sword/service-document -o /dev/null -w '%{http_code}\n'   # 401 expected
    ```
    Python/httpx honours `SSL_CERT_FILE=artifacts/weko3-server.crt`. **Chromium does
-   not**, and the hub's `PlaywrightDriver` does not set `ignore_https_errors`:
-   import the certificate into the NSS db (`certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n weko3 -i artifacts/weko3-server.crt`)
-   or ask the owner to approve a hub change. Without one of these the UI cases cannot load the page.
+   not**; for the self-signed certificate export **`ATH_BROWSER_IGNORE_HTTPS_ERRORS=1`** (owner decision
+   2026-10-09). The hub's Python Playwright driver reads it (hub `docs/ARCHITECTURE.md`, "Browser TLS":
+   `1`/`true`/`yes`/`on` turn `ignore_https_errors` on for the browser context), so no generated test is
+   edited and no certificate goes into an NSS db. It is in `.env.example`; keep it out of any run that
+   targets a server with a real certificate.
    `SESSION_COOKIE_SECURE=True` means a login over plain `http://127.0.0.1:5001` may
    not keep its cookie (UNVERIFIED); UI cases use https. API cases use
    `WEKO_BASE_URL=http://127.0.0.1:5001` (and `NO_PROXY=127.0.0.1` behind a proxy).
 4. **.env** from `.env.example`: set `WEKO_BASE_URL`, the container names
    (`WEKO_WEB_CONTAINER`, `WEKO_DB_CONTAINER`, `WEKO_REDIS_CONTAINER`,
    `WEKO_ES_CONTAINER`, `WEKO_WORKER_CONTAINER`) exactly as `docker ps --format '{{.Names}}'`
-   shows, `SW_REDIS_DB` (value of `ACCOUNTS_SESSION_REDIS_DB_NO`, default 1; verify), `SW_USER_PASSWORD=uspass123`.
+   shows, `SW_REDIS_DB` (value of `ACCOUNTS_SESSION_REDIS_DB_NO`, default 1; verify), `SW_USER_PASSWORD=uspass123`,
+   and `ATH_BROWSER_IGNORE_HTTPS_ERRORS=1` for UI cases over the self-signed https.
 5. **Copy the helpers** into the web container and sanity-check Python:
    ```sh
    set -a; . ./.env; set +a

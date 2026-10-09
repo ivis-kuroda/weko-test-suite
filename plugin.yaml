@@ -284,6 +284,18 @@ operations:
     params: [container, since]
     timeoutMs: 60000
 
+  # The web application log, the one source both the `app_log` evidence
+  # collector and a case's log expectations read. A case proves that the
+  # *expected* handler line is there (operation_result with `matches`, see
+  # tools/log_expect.py and docs/LOG-JUDGEMENT.md); it never asks that the log
+  # be free of other ERROR lines. `since` is `{{run.startedAt}}`.
+  OP-APP-LOG:
+    description: "Web container log lines since a UTC timestamp (RFC 3339, e.g. {{run.startedAt}})."
+    executor: shell
+    run: ["docker", "logs", "--since", "{{param.since}}", "{{env.WEKO_WEB_CONTAINER}}"]
+    params: [since]
+    timeoutMs: 60000
+
   # The Redis DB number of the session/lock store is WEKO configuration
   # (ACCOUNTS_SESSION_REDIS_DB_NO); the case supplies it.
   OP-REDIS-CLI:
@@ -331,14 +343,15 @@ states: {}
 # after the action (when saving evidence) and, with timing before_and_after,
 # judges only the lines added in between.
 evidence:
-  # Application log of the web container since this run started. WEKO logs
-  # every rejected request with current_app.logger.error, so error cases will
-  # list ERROR lines here; a case marks the expected ones with an evidence
-  # `ignore` pattern.
+  # Application log of the web container since this run started. WEKO's
+  # internals write ERROR lines and stack traces for harmless and critical
+  # conditions alike, also far outside what a case is about, so this channel
+  # is kept as evidence (the saved diff-app-log file) and never judged on its
+  # content. What a case asserts about the log is positive and specific: its
+  # expected handler line exists, at the expected level (OP-APP-LOG).
   app_log:
-    operation: OP-DOCKER-LOGS
+    operation: OP-APP-LOG
     params:
-      container: "{{env.WEKO_WEB_CONTAINER}}"
       since: "{{run.startedAt}}"
 
   db_log:
@@ -367,18 +380,27 @@ redact:
     # Tokens the helpers mint are prefixed, so they stay recognisable in logs.
     - "WEKO_TEST_TOKEN_[A-Za-z0-9_-]+"
 
-# Only the channels that can actually decide a verdict bind it. Read from the
-# hub's runner: db_records `expected_change`/`no_residual_change`,
-# app_log `expected_error`, `screenshot` `matches_expectation` and the
-# network `*_response` conditions need observation fields nothing fills in
-# yet, so under the default policy every case would stay inconclusive. And a
-# verdict with no deciding channel is inconclusive too, so error cases need
-# app_log to decide: `clean`, with the expected ERROR line suppressed per case.
-# A missing "expected" error is caught by the case's own expectation on the
-# log (operation_result), not by the policy.
+# The application log is NOT a negative gate. WEKO's internals log errors and
+# stack traces for harmless and critical conditions, also outside what a
+# change touched, so "no ERROR line" would judge noise (owner decision
+# 2026-10-09; docs/LOG-JUDGEMENT.md). What decides the verdict is positive:
+# each case's own `expect` entries, among them an operation_result that
+# finds the expected handler line (`[<code>] METHOD path: message`) in the
+# log read by OP-APP-LOG, at the level the design requires (4xx WARNING,
+# 500/501/503 ERROR). Out-of-scope ERROR lines and traces stay in the saved
+# diff-app-log evidence and are listed as remarks by tools/log_remarks.py.
+#
+# Why app_log is still `clean` and not `informational`: the hub's verdict is
+# `inconclusive` when no channel at all decided it, and the channels that
+# could (db_records `expected_change`, network `*_response`, screenshot) need
+# observation fields nothing fills in yet. `clean` with an `ignore` of `.*`
+# on every case and scenario (tools/check_log_rule.py enforces it) turns
+# app_log into a presence gate: the collector must have run (missing evidence
+# is never a pass), and no line, whatever its level, can fail the entity.
+# The suppressed-line count stays in the observation.
 policy:
-  id: weko-sword-log-bound
-  title: SWORD API cases judged on the web application log; other channels recorded for review
+  id: weko-sword-positive-log
+  title: SWORD API cases judged by their expectations, among them the expected handler log line; the log content never fails a case
   rules:
     nominal:
       screenshot: informational

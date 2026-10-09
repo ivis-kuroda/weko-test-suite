@@ -94,6 +94,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "rate_limit": None,
         "lock_seconds": 0,
         "faithful_log": True,
+        "handler_log": True,
+        "noise_log": False,
         "location_header": True,
     },
 }
@@ -536,13 +538,19 @@ class Rig:
             sw = SwordError(code, recid=req.path.rsplit("/", 1)[-1])
         else:
             sw = err
+        # The handler line has the shape of the real one (detailed design 2.2 step 3:
+        # "[{code}] {method} {path}: {message}"; ERROR for 500 and above, WARNING below).
+        # `handler_log: false` leaves it out, to show that a case notices the loss.
         text = f"[{sw.code}] {endpoint}: {sw.message}"
+        handler_log = w.settings.get("handler_log", True)
         if sw.status >= 500:
-            w.log("ERROR", text + "\n" + _fake_traceback(sw, isinstance(err, Fault)))
+            if handler_log:
+                w.log("ERROR", text + "\n" + _fake_traceback(sw, isinstance(err, Fault)))
         else:
             if sw.log and w.settings.get("faithful_log", True):
                 w.log("ERROR", sw.log)
-            w.log("WARNING", text)
+            if handler_log:
+                w.log("WARNING", text)
         return Response(
             sw.status, self._error_doc(sw.type, f"{errtable.PREFIX}{sw.code}: {sw.message}")
         )
@@ -1001,6 +1009,10 @@ class Rig:
     # -- dispatch --
     def handle(self, req: Request) -> Response:
         method, path = req.method, req.path
+        if self.w.settings.get("noise_log", False) and path.startswith("/sword/"):
+            # Unrelated ERROR line and stack trace, as the real application emits them for
+            # harmless or out-of-scope conditions. No verdict may depend on them.
+            self.w.log("ERROR", _NOISE)
         try:
             try:
                 m = re.fullmatch(r"/sword/deposit/([^/]+)", path)
@@ -1031,6 +1043,14 @@ class Rig:
     def _plain(self, status: int, type_: str, message: str) -> Response:
         self.w.log("WARNING", f"{status} {message}")
         return Response(status, self._error_doc(type_, message))
+
+
+_NOISE = (
+    "celery task weko_indexer.tasks.index_item failed: ConnectionError (out-of-scope noise)\n"
+    "Traceback (most recent call last):\n"
+    '  File "/code/weko-indexer/weko_indexer/tasks.py", line 0, in index_item\n'
+    "ConnectionError: noise of the stub, unrelated to the SWORD request"
+)
 
 
 def _fake_traceback(err: SwordError, injected: bool) -> str:

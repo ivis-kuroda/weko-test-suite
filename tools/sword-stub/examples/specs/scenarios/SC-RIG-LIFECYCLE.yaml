@@ -76,7 +76,7 @@ cleanup: []
 evidence:
   timing: before_and_after
   ignore:
-    - "Item not found"
+    - ".*"
 evidenceWaivers: []
 tags:
   - rig-only

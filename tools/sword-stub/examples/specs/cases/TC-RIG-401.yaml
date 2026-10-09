@@ -18,7 +18,7 @@ polarity: error
 evidence:
   timing: before_and_after
   ignore:
-    - "Authentication is required"
+    - ".*"
 evidenceWaivers: []
 priority: P2
 tags:
